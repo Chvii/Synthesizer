@@ -1,30 +1,31 @@
 package core.Visuals;
 
+import core.Constants.ConstantValues;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.Arrays;
 
 public class WaveformPanel extends JPanel {
-    private final float[] waveformBuffer; // Circular buffer for waveform data
-    private int bufferIndex = 0;         // Current write position in the buffer
-    private static final int BUFFER_SIZE = 4096; // Larger buffer for smoother transitions
+    private final float[] waveformBuffer;
+    private int bufferIndex = 0;
+    private static final int BUFFER_SIZE = 128;
 
     private final Timer repaintTimer;
 
     public WaveformPanel() {
         waveformBuffer = new float[BUFFER_SIZE];
-        Arrays.fill(waveformBuffer, 0); // Initialize buffer with silence
+        Arrays.fill(waveformBuffer, 0);
 
-        // Timer to repaint at 100 FPS (10ms intervals)
-        repaintTimer = new Timer(10, e -> repaint());
+        repaintTimer = new Timer(6, e -> repaint());
         repaintTimer.start();
     }
 
-    public synchronized void updateWaveform(byte[] newWaveform) {
-        // Convert byte data to normalized float values (-1.0 to 1.0)
-        for (byte b : newWaveform) {
-            waveformBuffer[bufferIndex] = b / 128f; // Normalize byte to float
-            bufferIndex = (bufferIndex + 1) % BUFFER_SIZE; // Wrap around buffer
+    public synchronized void updateWaveform(float[] newWaveform) {
+        // Copy new waveform data to the circular buffer
+        for (float sample : newWaveform) {
+            waveformBuffer[bufferIndex] = sample;
+            bufferIndex = (bufferIndex + 1) % BUFFER_SIZE;
         }
     }
 
@@ -32,29 +33,27 @@ public class WaveformPanel extends JPanel {
     protected synchronized void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        // Draw a black background
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, getWidth(), getHeight());
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Draw the waveform
-        g.setColor(Color.GREEN);
+        // Gradient background
+        GradientPaint gradient = new GradientPaint(0, 0, Color.BLACK, 0, getHeight(), Color.DARK_GRAY);
+        g2d.setPaint(gradient);
+        g2d.fillRect(0, 0, getWidth(), getHeight());
+
+        // Draw waveform
+        g2d.setColor(Color.GREEN);
         int midY = getHeight() / 2;
+        float xScale = (float) getWidth() / BUFFER_SIZE;
 
-        int width = getWidth();
-        int height = getHeight();
+        int[] xPoints = new int[BUFFER_SIZE];
+        int[] yPoints = new int[BUFFER_SIZE];
 
-        // Calculate pixel width per sample
-        float pixelsPerSample = (float) width / BUFFER_SIZE;
-
-        for (int i = 0; i < BUFFER_SIZE - 1; i++) {
-            int x1 = (int) (i * pixelsPerSample);
-            int x2 = (int) ((i + 1) * pixelsPerSample);
-
-            // Scale waveform data to panel height
-            int y1 = midY - (int) (waveformBuffer[(bufferIndex + i) % BUFFER_SIZE] * midY);
-            int y2 = midY - (int) (waveformBuffer[(bufferIndex + i + 1) % BUFFER_SIZE] * midY);
-
-            g.drawLine(x1, y1, x2, y2);
+        for (int i = 0; i < BUFFER_SIZE; i++) {
+            xPoints[i] = (int) (i * xScale);
+            yPoints[i] = midY - (int) (waveformBuffer[(bufferIndex + i) % BUFFER_SIZE] * midY);
         }
+
+        g2d.drawPolyline(xPoints, yPoints, BUFFER_SIZE);
     }
 }

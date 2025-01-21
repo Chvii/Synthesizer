@@ -1,3 +1,4 @@
+// Refactored Tone class
 package core.SynthLogic;
 
 import core.Constants.ConstantValues;
@@ -10,6 +11,7 @@ import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.Arrays;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Tone extends JFrame implements KeyListener {
@@ -30,42 +32,55 @@ public class Tone extends JFrame implements KeyListener {
         waveformPanel = new WaveformPanel();
         add(waveformPanel);
 
-
         setVisible(true);
 
         // Mixer thread continuously combines audio from all active voices
         mixerThread = new Thread(() -> {
-            byte[] mixBuffer = new byte[ConstantValues.BUFFER_SIZE];
+            float[] mixBuffer = new float[ConstantValues.BUFFER_SIZE];
+
             while (true) {
                 // Clear the mix buffer
-                for (int i = 0; i < mixBuffer.length; i++) {
-                    mixBuffer[i] = 0;
-                }
+                Arrays.fill(mixBuffer, 0);
 
                 // Mix all active voices
-                double activeVoiceCount = activeVoices.size();
+                int activeVoiceCount = activeVoices.size();
                 if (activeVoiceCount > 0) {
                     for (Voice voice : activeVoices) {
-                        byte[] voiceBuffer = voice.generateAudio();
-                        for (int i = 0; i < mixBuffer.length; i++) {
-                            mixBuffer[i] += (voiceBuffer[i]/activeVoiceCount); // Normalize by dividing by the number of voices?? This doesn't seem to work correctly, volume dips
+                        float[] voiceBuffer = voice.generateAudio();
+
+                        for (int i = 0; i < ConstantValues.BUFFER_SIZE; i++) {
+                            mixBuffer[i] += voiceBuffer[i] / activeVoiceCount; // Average the voices
                         }
+                    }
+
+                    // Clamp the mixed buffer to the range [-1.0, 1.0]
+                    for (int i = 0; i < mixBuffer.length; i++) {
+                        mixBuffer[i] = Math.max(Math.min(mixBuffer[i], 1.0f), -1.0f);
                     }
                 }
 
-                // Update the waveform analyzer
+                // Update the waveform panel with the mixed buffer
                 waveformPanel.updateWaveform(mixBuffer);
 
-                // Write the mixed buffer to the audio line
-                line.write(mixBuffer, 0, mixBuffer.length);
+                // Convert the mix buffer to byte[] for the SourceDataLine
+                byte[] byteBuffer = new byte[ConstantValues.BUFFER_SIZE * 2];
+                for (int i = 0, j = 0; i < mixBuffer.length; i++, j += 2) {
+                    int intSample = (int) (mixBuffer[i] * 32767); // Convert float to 16-bit PCM
 
-                // Remove stopped voices if any are present
+                    // Pack into two bytes (big-endian)
+                    byteBuffer[j] = (byte) ((intSample >> 8) & 0xFF);
+                    byteBuffer[j + 1] = (byte) (intSample & 0xFF);
+                }
+
+                // Write byteBuffer to the SourceDataLine
+                line.write(byteBuffer, 0, byteBuffer.length);
+
+                // Remove stopped voices
                 activeVoices.removeIf(Voice::isStopped);
             }
         });
         mixerThread.start();
     }
-
 
     private void play(Note note, char keyChar) {
         if (activeVoices.stream().anyMatch(v -> v.getKeyChar() == keyChar)) return;
@@ -101,7 +116,7 @@ public class Tone extends JFrame implements KeyListener {
             this.octave = octave * 2;
         }
         if(e.getKeyChar() == '$'){
-           strategySwitcher++;
+            strategySwitcher++;
         }
         if (e.getKeyChar() == '-') {
             this.octave = octave / 2;
@@ -137,6 +152,16 @@ public class Tone extends JFrame implements KeyListener {
     public void keyReleased(KeyEvent e) {
 
         stop(e.getKeyChar()); // stops the voices associated with the key that has been released
+    }
+
+    private byte[] convertFloatToByte(float[] floatBuffer) {
+        byte[] byteBuffer = new byte[floatBuffer.length * 2];
+        for (int i = 0; i < floatBuffer.length; i++) {
+            int intSample = (int) (floatBuffer[i] * 32767); // Scale to 16-bit range
+            byteBuffer[i * 2] = (byte) ((intSample >> 8) & 0xFF);
+            byteBuffer[i * 2 + 1] = (byte) (intSample & 0xFF);
+        }
+        return byteBuffer;
     }
 
 }
