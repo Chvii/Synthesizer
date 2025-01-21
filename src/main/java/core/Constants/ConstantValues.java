@@ -1,5 +1,5 @@
 package core.Constants;
 
 public class ConstantValues {
-    public static final int BUFFER_SIZE = 512;
+    public static final int BUFFER_SIZE = 64;
 }

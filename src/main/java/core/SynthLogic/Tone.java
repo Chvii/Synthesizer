@@ -70,7 +70,7 @@ public class Tone extends JFrame implements KeyListener {
     private void play(Note note, char keyChar) {
         if (activeVoices.stream().anyMatch(v -> v.getKeyChar() == keyChar)) return;
 
-        switch (strategySwitcher % 5) {
+        switch (strategySwitcher % 6) {
             case 1 -> waveformStrategy = new SineStrategy();
             case 2 -> waveformStrategy = new SquareStrategy();
             case 3 -> waveformStrategy = new SawStrategy();
