@@ -1,17 +1,32 @@
 package core.EnvelopeStrategy;
 
+import java.util.Timer;
+import java.util.concurrent.TimeUnit;
+
 public class EnvelopeWithSlowAttack implements EnvelopeStrategy {
-    private final double attackRate = 0.005;
-    private final double decayRate = 0.002;
+
+
+    private final double attackRate = 10;
+    private final double decayRate = 10;
     private final double sustainLevel = 0.6;
-    private final double releaseRate = 0.003;
+    private final double releaseRate = 10;
     private double currentVolume = 0.0;
     private boolean isReleasing = false;
 
     @Override
-    public void startEnvelope() {
-        currentVolume = 0.0;
-        isReleasing = false; // Ensure not in release phase
+    public double startEnvelope(double volume) {
+        volume = this.currentVolume;
+        for(int i = 0; i<attackRate; i++){
+            if(currentVolume > 1.0){
+                currentVolume = currentVolume + 0.1;
+            }
+        }
+        for(int i = 0; i<decayRate; i++){
+            if(currentVolume>sustainLevel){
+                currentVolume = currentVolume -0.1;
+            }
+        }
+        return volume;
     }
 
     @Override

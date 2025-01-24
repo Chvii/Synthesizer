@@ -3,7 +3,7 @@ package core.SynthLogic;
 import core.Constants.ConstantValues;
 import core.WaveformStrategy.WaveformStrategy;
 
-class Voice {
+public class Voice {
     private final Note note;
     private final char keyChar;
     private volatile boolean isPlaying = true;
@@ -17,41 +17,39 @@ class Voice {
         this.waveformStrategy = waveformStrategy;
     }
 
-    public float[] generateAudio() {
-        float[] buffer = new float[ConstantValues.BUFFER_SIZE]; // Normalized float samples (-1.0 to 1.0)
+    public synchronized float[] generateAudio() {
+        float[] buffer = new float[ConstantValues.BUFFER_SIZE];
 
-        if (!isPlaying && volume <= 0.0) return buffer;
+        if (volume <= 0.0) return buffer;
 
-        double step = 2 * Math.PI * note.getFrequency() / Note.SAMPLE_RATE;
+        double step = 2 * Math.PI * note.getFrequency() / ConstantValues.SAMPLE_RATE;
 
         for (int i = 0; i < buffer.length; i++) {
-            // Generate sample using the waveform strategy
-            double sample = waveformStrategy.generateSample(phase, volume);
-
-            // Normalize to the range [-1.0, 1.0]
-            buffer[i] = (float) sample;
-
-            // Update the phase
+            buffer[i] = (float) waveformStrategy.generateSample(phase, volume);
             phase += step;
             if (phase > 2 * Math.PI) phase -= 2 * Math.PI;
         }
 
-        // Apply fade-out when the voice is stopping
         if (!isPlaying) {
-            volume -= 0.01; // Gradual fade-out
+            volume -= 0.01;
             if (volume < 0) volume = 0;
         }
 
         return buffer;
     }
 
-
     public void stopVoice() {
         isPlaying = false;
     }
 
     public boolean isStopped() {
-        return !isPlaying && volume <= 0.0;
+        if(!isPlaying && volume <= 0.0){
+            return true;
+        }
+        return false;
+    }
+    public Note getNote(){
+        return this.note;
     }
 
     public char getKeyChar() {

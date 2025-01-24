@@ -1,11 +1,7 @@
 package core.SynthLogic;
 
-class Note {
-    /*
-     *   Handles note sample rate and sets the basic frequencies for notes
-     *
-     */
-    public static final double SAMPLE_RATE = 44100; // Updated sample rate to 44.1 kHz for compatibility with modern audio standards
+public class Note {
+
     private double frequency;
 
     public Note(double frequency) {
@@ -16,9 +12,26 @@ class Note {
         return frequency;
     }
 
-    public void setFrequency(double f) {
-        this.frequency = f;
+    public void setFrequency(double frequency) {
+        this.frequency = frequency;
     }
+    public Note modulateFrequency(double modulator){
+        return new Note(frequency * modulator);
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Note note = (Note) o;
+        return Double.compare(note.frequency, frequency) == 0;
+    }
+
+    // Changes default behaviour of the equals method
+    @Override
+    public int hashCode() {
+        return Double.hashCode(frequency);
+    }
+
 
     public static final Note C4 = new Note(261.63);
     public static final Note Csharp4 = new Note(277.18);

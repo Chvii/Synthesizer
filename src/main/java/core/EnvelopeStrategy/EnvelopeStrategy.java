@@ -1,6 +1,6 @@
 package core.EnvelopeStrategy;
 
 public interface EnvelopeStrategy {
-    void startEnvelope();
+    double startEnvelope(double volume);
     double applyEnvelope(boolean isPlaying);
 }
