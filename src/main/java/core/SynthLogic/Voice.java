@@ -8,8 +8,14 @@ public class Voice {
     private final char keyChar;
     private volatile boolean isPlaying = true;
     private double phase = 0;
-    private double volume = 1.0;
+    private double volume = 0.0;
     private final WaveformStrategy waveformStrategy;
+    private boolean attackPhase = true;
+    private static double attackTime = 0.1;
+    private boolean decayPhase = false;
+    private static double decayTime = 0.1;
+    private static double sustainLevel = 1.0;
+    private static double releaseTime = 0.1;
 
     public Voice(Note note, char keyChar, WaveformStrategy waveformStrategy) {
         this.note = note;
@@ -19,6 +25,20 @@ public class Voice {
 
     public synchronized float[] generateAudio() {
         float[] buffer = new float[ConstantValues.BUFFER_SIZE];
+        if(attackPhase && isPlaying){
+            volume += attackTime;
+        }
+        if(volume >= 1.0 && isPlaying){
+            attackPhase = false;
+            decayPhase = true;
+        }
+        if(decayPhase && isPlaying){
+            volume -= decayTime;
+            if(volume <= sustainLevel && isPlaying){
+                decayPhase = false;
+                volume = sustainLevel;
+            }
+        }
 
         if (volume <= 0.0) return buffer;
 
@@ -31,8 +51,13 @@ public class Voice {
         }
 
         if (!isPlaying) {
-            volume -= 0.01;
-            if (volume < 0) volume = 0;
+            volume -= releaseTime;
+            if (volume < 0){
+                volume = 0;
+                attackPhase = true;
+                decayPhase = false;
+            }
+
         }
 
         return buffer;
@@ -54,5 +79,29 @@ public class Voice {
 
     public char getKeyChar() {
         return keyChar;
+    }
+    public static void setAttackTime(double time){
+        attackTime = time*0.00005;
+    }
+    public static double getAttackTime(){
+        return attackTime;
+    }
+    public static void setDecayTime(double time){
+        decayTime = time*0.00001;
+    }
+    public static double getDecayTime() {
+        return decayTime;
+    }
+    public static void setSustainLevel(double level){
+        sustainLevel = 1.0 - (level / 100.0);
+    }
+    public static double getSustainLevel() {
+            return sustainLevel;
+    }
+    public static void setReleaseTime(double time){
+        releaseTime = time*0.00001;
+    }
+    public static double getReleaseTime(){
+        return releaseTime;
     }
 }

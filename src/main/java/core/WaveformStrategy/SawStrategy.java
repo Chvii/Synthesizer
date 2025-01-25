@@ -7,7 +7,7 @@ public class SawStrategy implements WaveformStrategy {
     @Override
     public double generateSample(double phase, double volume) {
         this.phase = phase % (2 * Math.PI); // Normalize phase
-        return ((this.phase / (2 * Math.PI)) * 2 - 1) * volume;
+        return ((this.phase / (2 * Math.PI)) * 2 - 1+Math.random()/50) * volume;
     }
 
     @Override

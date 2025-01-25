@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.util.function.DoubleConsumer;
 
 class JKnob extends JComponent implements MouseListener, MouseMotionListener {
 
@@ -16,6 +17,8 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
     private double theta; // Current angle of the knob
     private Color knobColor;
     private Color spotColor;
+    private double modifierParameter = 1;
+    private DoubleConsumer valueSetter;
 
     private boolean pressedOnKnob; // Track if the user clicked on the knob
     private int lastY; // Track the last y-coordinate of the mouse
@@ -104,21 +107,29 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
     public void mouseDragged(MouseEvent e) {
         if (pressedOnKnob) {
             int currentY = e.getY();
-            int deltaY = lastY - currentY; // Determine the vertical drag distance
+            int deltaY = lastY - currentY;
 
             if (deltaY > 0) {
-                // Dragging upwards (clockwise)
-                theta += 0.05; // Increment the angle
+                theta += 0.05;
             } else if (deltaY < 0) {
-                // Dragging downwards (counter-clockwise)
-                theta -= 0.05; // Decrement the angle
+                theta -= 0.05;
             }
 
-            theta = clampAngle(theta); // Clamp the angle within the range
-            lastY = currentY; // Update the last y-coordinate
-            repaint(); // Redraw the knob
+            theta = clampAngle(theta);
+            lastY = currentY;
+
+
+            double normalizedValue = 100 - ((theta - minAngle) / (maxAngle - minAngle) * 100) +1;
+
+            // Call the value setter
+            if (valueSetter != null) {
+                valueSetter.accept(normalizedValue);
+            }
+
+            repaint();
         }
     }
+
 
     /**
      * Clamp the angle to ensure it stays between minAngle and maxAngle.
@@ -160,6 +171,13 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
      */
     public void setMaxAngle(double angle) {
         this.maxAngle = normalizeAngle(angle);
+    }
+    public double getModifierParameter(){
+        return modifierParameter;
+    }
+    public void addKnobListener(DoubleConsumer valueSetter) {
+        this.valueSetter = valueSetter;
+        repaint();
     }
 
     // Unused mouse event handlers

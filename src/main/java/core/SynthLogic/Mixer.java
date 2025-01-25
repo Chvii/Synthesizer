@@ -1,6 +1,7 @@
 package core.SynthLogic;
 
 import core.Constants.ConstantValues;
+import core.SynthLogic.Effects.EffectRack;
 import core.Visuals.WaveformPanel;
 import core.Visuals.WaveformUpdateListener;
 
@@ -18,9 +19,11 @@ public class Mixer{
     private final CopyOnWriteArrayList<Voice> activeVoices;
     private final ExecutorService executor;
     private final List<WaveformUpdateListener> listeners = new ArrayList<>();
+    private EffectRack effectRack;
 
 
-    public Mixer(SourceDataLine line) {
+    public Mixer(SourceDataLine line, EffectRack effectRack) {
+        this.effectRack = effectRack;
         this.line = line;
         this.activeVoices = new CopyOnWriteArrayList<>();
         this.executor = Executors.newCachedThreadPool(); // Thread pool for voice processing
@@ -80,10 +83,14 @@ public class Mixer{
                             }
                         }
                     }
+                    // woohey effect shit
+                    mixBuffer = effectRack.applyEffect(mixBuffer);
                     // Clamp to [-1.0, 1.0]
                     for (int i = 0; i < mixBuffer.length; i++) {
                         mixBuffer[i] = Math.max(-1.0f, Math.min(1.0f, mixBuffer[i]));
                     }
+
+
                 }
                 notifyWaveformUpdate(mixBuffer);
                 // Convert mixBuffer to byte array
@@ -96,7 +103,6 @@ public class Mixer{
                 activeVoices.stream()
                         .filter(v -> v.isStopped() == true)
                         .forEach(activeVoices::remove);
-
             }
         }).start();
     }

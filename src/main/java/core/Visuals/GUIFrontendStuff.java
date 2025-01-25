@@ -2,6 +2,7 @@ package core.Visuals;
 
 import core.SynthLogic.Mixer;
 import core.SynthLogic.Tone;
+import core.SynthLogic.Voice;
 import core.WaveformStrategy.WaveformStrategyPicker;
 
 import javax.swing.*;
@@ -153,8 +154,7 @@ public class GUIFrontendStuff extends JFrame {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(Color.GREEN);
                 g2.setStroke(new BasicStroke(2));
-                // Example ADSR visualization
-                int[] xPoints = {0, 50, 150, 250, 300};
+                int[] xPoints = {0, (int) (Voice.getAttackTime()), 150, 250, 300};
                 int[] yPoints = {200, 50, 100, 100, 200};
                 g2.drawPolyline(xPoints, yPoints, xPoints.length);
             }
@@ -164,24 +164,40 @@ public class GUIFrontendStuff extends JFrame {
         panel.add(graphPanel);
 
         // ADSR Knobs
-        String[] knobLabels = {"Attack", "Decay", "Sustain", "Release"};
-        for (int i = 0; i < knobLabels.length; i++) {
-            JPanel knobPanel = createKnobPanel(knobLabels[i]);
-            knobPanel.setBounds(20 + i * 130, 220, 80, 60);
-            panel.add(knobPanel);
-        }
+        JPanel attackKnob = createKnobPanel("Attack", Voice::setAttackTime);
+        attackKnob.setBounds(20, 220, 80, 60);
+
+        JPanel decayKnob = createKnobPanel("Decay", Voice::setDecayTime);
+        decayKnob.setBounds(120, 220, 80, 60);
+
+        JPanel sustainKnob = createKnobPanel("Sustain", Voice::setSustainLevel);
+        sustainKnob.setBounds(220, 220, 80, 60);
+
+        JPanel releaseKnob = createKnobPanel("Release", Voice::setReleaseTime);
+        releaseKnob.setBounds(320, 220, 80, 60);
+
+        panel.add(attackKnob);
+        panel.add(decayKnob);
+        panel.add(sustainKnob);
+        panel.add(releaseKnob);
 
         return panel;
     }
 
-    private JPanel createKnobPanel(String label) {
+
+    private JPanel createKnobPanel(String label, java.util.function.DoubleConsumer valueSetter) {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.setOpaque(false);
 
         // JKnob
-        JKnob knob = new JKnob( new Color(70, 70, 70), Color.BLACK);
+        JKnob knob = new JKnob(new Color(70, 70, 70), Color.BLACK);
         knob.setRadius(20);
+
+        // Add listener to update ADSR value
+        knob.addKnobListener(valueSetter);
+
+
         // Knob Label
         JLabel knobLabel = new JLabel(label, SwingConstants.LEFT);
         knobLabel.setForeground(Color.WHITE);
@@ -193,6 +209,7 @@ public class GUIFrontendStuff extends JFrame {
 
         return panel;
     }
+
 
     private JPanel createFooterPanel() {
         JPanel panel = new JPanel();

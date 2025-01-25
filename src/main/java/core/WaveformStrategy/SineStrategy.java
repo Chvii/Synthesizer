@@ -1,8 +1,11 @@
 package core.WaveformStrategy;
 
 
+import java.util.Random;
+
 public class SineStrategy implements WaveformStrategy {
     private double phase;
+
 
     @Override
     public double generateSample(double phase, double volume) {
