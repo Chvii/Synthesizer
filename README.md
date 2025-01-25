@@ -45,11 +45,11 @@ p: E
 
 ## KNOWN ISSUES
 * **Playing two or more notes at the same time produces significantly less volume than playing a single note**
-_I have been ripping my hair out trying to figure out why this happens. I guess it's probably due to me using multiple things in a way they aren't supposed to be used_
+[FIXED]
 * **Waveform display looks like crud**
-_Again, been trying a few different things to make the waveform display smoother, but I am yet to find a good solution. I'm guessing that it comes down to some way of taking a few samples and then showing the average waveform produced by those samples, and then take another batch of samples, and make a gliding transition towards displaying a waveform for those samples(?), but I will probably have to just deep-dive into someone else's project where they've made a good waveform oscilloscope._
+[FIXED..?]
 * **No ADSR or way to control/change the envelope**
-_This is the next feature I am going to focus on implementing. But I am pretty sure this exact feature is going to bite me, and force a refactoring of the whole codebase. So that will be fun! :)_
+[FIXED]
 * **What is the point of this?**
 _Not sure. Maybe if I end up making a cool synthesizer that does something neat, I can turn it into a vst plugin. (Whether that means that I have to learn C++ and then rewrite the whole thing in C++; I am not sure... But I hope not)._
 
