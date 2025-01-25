@@ -31,22 +31,14 @@ public class WaveformPanel extends JPanel implements WaveformUpdateListener {
     @Override
     public void updateWaveform(float[] newSamples) {
         synchronized (waveformBuffer) {
-            // Normalize and add new samples to the buffer
             for (float sample : newSamples) {
-                waveformBuffer.add(sample / maxAmplitude); // Normalize to max amplitude
+                waveformBuffer.add(sample);
                 if (waveformBuffer.size() > MAX_SAMPLES) {
-                    waveformBuffer.remove(0); // Keep the buffer within the max size
+                    waveformBuffer.remove(0);
                 }
             }
-
-            // Dynamically adjust max amplitude for scaling
             float maxSample = 1.0f;
-            for (float sample : newSamples) {
-                maxSample = Math.max(maxSample, Math.abs(sample));
-            }
-
-
-            maxAmplitude = Math.max(maxAmplitude * 0.95f, maxSample); // Smooth scaling
+            maxAmplitude = Math.max(maxAmplitude, maxSample);
         }
     }
 

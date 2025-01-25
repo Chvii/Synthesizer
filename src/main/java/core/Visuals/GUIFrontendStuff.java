@@ -1,5 +1,7 @@
 package core.Visuals;
 
+import core.SynthLogic.Effects.EffectController;
+import core.SynthLogic.Effects.EffectPicker;
 import core.SynthLogic.Mixer;
 import core.SynthLogic.Tone;
 import core.SynthLogic.Voice;
@@ -15,9 +17,11 @@ public class GUIFrontendStuff extends JFrame {
     private JLabel strategyLabel;
     private JLabel octaveStateLabel;
     private Tone tone;
-    public GUIFrontendStuff(Mixer mixer, WaveformStrategyPicker waveformStrategyPicker, Tone tone) {
+    private EffectController effectController;
+    public GUIFrontendStuff(Mixer mixer, WaveformStrategyPicker waveformStrategyPicker, Tone tone, EffectController effectController) {
         this.waveformStrategyPicker = waveformStrategyPicker;
         this.tone = tone;
+        this.effectController = effectController;
         // Frame Setup
         setTitle("Synthesizer VST");
         setSize(1000, 800);
@@ -61,6 +65,11 @@ public class GUIFrontendStuff extends JFrame {
         JPanel footerPanel = createFooterPanel();
         footerPanel.setBounds(0, 750, 1000, 50);
         backgroundPanel.add(footerPanel);
+
+        // Effect panel
+        JPanel effectPanel = createEffectPanel(effectController);
+        effectPanel.setBounds(400,300,500,300);
+        backgroundPanel.add(effectPanel);
 
         setVisible(true);
     }
@@ -137,6 +146,28 @@ public class GUIFrontendStuff extends JFrame {
 
         return panel;
     }
+
+    private JPanel createEffectPanel(EffectController effectController) {
+        JPanel panel = new JPanel();
+        panel.setLayout(null);
+        panel.setBackground(new Color(30, 30, 30));
+        panel.setBorder(BorderFactory.createLineBorder(new Color(150, 150, 150), 2));
+
+        JComboBox<EffectPicker.EffectEnums> effectDropdown = new JComboBox<>(EffectPicker.EffectEnums.values());
+        effectDropdown.setBounds(150, 60, 150, 100);
+        effectDropdown.addActionListener(e -> {
+            EffectPicker.EffectEnums selectedEffect = (EffectPicker.EffectEnums) effectDropdown.getSelectedItem();
+            effectController.changeEffect(selectedEffect);
+        });
+
+        panel.add(effectDropdown);
+        return panel;
+    }
+
+
+
+
+
 
 
     private JPanel createADSRPanel() {

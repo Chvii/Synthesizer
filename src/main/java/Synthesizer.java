@@ -15,11 +15,11 @@ public class Synthesizer {
         line.open(af, (int) af.getSampleRate());
         line.start();
         WaveformStrategyPicker waveformStrategyPicker = new WaveformStrategyPicker();
-        EffectRack noise = new NullEffect();
-        Mixer mixer = new Mixer(line,noise);
-
+        EffectPicker effectPicker = new EffectPicker();
+        EffectController effectController = new EffectController(effectPicker);
+        Mixer mixer = new Mixer(line, effectPicker); // Mixer uses the EffectPicker
         Tone tone = new Tone(line, waveformStrategyPicker,mixer);
-        GUIFrontendStuff gui = new GUIFrontendStuff(tone.getMixer(),waveformStrategyPicker,tone);
+        GUIFrontendStuff gui = new GUIFrontendStuff(mixer, waveformStrategyPicker, tone, effectController);
         new SynthController(tone, gui); // Attach the controller
     }
 }

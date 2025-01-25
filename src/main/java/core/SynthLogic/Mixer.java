@@ -89,7 +89,7 @@ public class Mixer{
                     for (int i = 0; i < mixBuffer.length; i++) {
                         mixBuffer[i] = Math.max(-1.0f, Math.min(1.0f, mixBuffer[i]));
                     }
-
+                    notifyWaveformUpdate(mixBuffer);
 
                 }
                 notifyWaveformUpdate(mixBuffer);
