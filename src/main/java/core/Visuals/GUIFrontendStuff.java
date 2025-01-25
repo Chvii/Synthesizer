@@ -1,5 +1,6 @@
 package core.Visuals;
 
+import core.SynthLogic.Effects.DelayVerb;
 import core.SynthLogic.Effects.EffectController;
 import core.SynthLogic.Effects.EffectPicker;
 import core.SynthLogic.Mixer;
@@ -53,7 +54,7 @@ public class GUIFrontendStuff extends JFrame {
 
         // ADSR Panel
         JPanel adsrPanel = createADSRPanel();
-        adsrPanel.setBounds(20, 300, 500, 300);
+        adsrPanel.setBounds(20, 300, 400, 350);
         backgroundPanel.add(adsrPanel);
 
         // Octave buttons and text
@@ -68,7 +69,7 @@ public class GUIFrontendStuff extends JFrame {
 
         // Effect panel
         JPanel effectPanel = createEffectPanel(effectController);
-        effectPanel.setBounds(400,300,500,300);
+        effectPanel.setBounds(450,300,500,300);
         backgroundPanel.add(effectPanel);
 
         setVisible(true);
@@ -154,14 +155,80 @@ public class GUIFrontendStuff extends JFrame {
         panel.setBorder(BorderFactory.createLineBorder(new Color(150, 150, 150), 2));
 
         JComboBox<EffectPicker.EffectEnums> effectDropdown = new JComboBox<>(EffectPicker.EffectEnums.values());
-        effectDropdown.setBounds(150, 60, 150, 100);
+        effectDropdown.setBounds(20, 20, 150, 30);
         effectDropdown.addActionListener(e -> {
             EffectPicker.EffectEnums selectedEffect = (EffectPicker.EffectEnums) effectDropdown.getSelectedItem();
             effectController.changeEffect(selectedEffect);
-        });
 
+            // Show knobs only for DelayVerb
+            if (selectedEffect == EffectPicker.EffectEnums.DELAYVERB) {
+                addDelayVerbKnobs(panel);
+            } else {
+                panel.removeAll();
+                panel.add(effectDropdown); // Re-add dropdown
+            }
+            panel.revalidate();
+            panel.repaint();
+        });
         panel.add(effectDropdown);
+
         return panel;
+    }
+
+    private void addDelayVerbKnobs(JPanel panel) {
+        // Delay Time Knob
+        JKnob delayKnob = new JKnob(new Color(70, 70, 70), Color.BLACK);
+        delayKnob.setRange(0.001, 2.0); // Fast to slow delay
+        delayKnob.addKnobListener(value -> {
+            DelayVerb delayVerb = (DelayVerb) effectController.getCurrentEffect();
+            delayVerb.setDelayTimeInSeconds((float) value);
+        });
+        delayKnob.setBounds(50, 70, 100, 100);
+        panel.add(delayKnob);
+
+        JLabel delayLabel = new JLabel("Delay Time");
+        delayLabel.setForeground(Color.WHITE);
+        delayLabel.setBounds(70, 170, 100, 20);
+        panel.add(delayLabel);
+
+        // Feedback Knob
+        JKnob feedbackKnob = new JKnob(new Color(70, 70, 70), Color.BLACK);
+        feedbackKnob.setRange(0.0, 1.0);
+        feedbackKnob.addKnobListener(value -> {
+            DelayVerb delayVerb = (DelayVerb) effectController.getCurrentEffect();
+            delayVerb.setFeedback((float) value);
+        });
+        feedbackKnob.setBounds(200, 70, 100, 100);
+        panel.add(feedbackKnob);
+
+        JLabel feedbackLabel = new JLabel("Feedback");
+        feedbackLabel.setForeground(Color.WHITE);
+        feedbackLabel.setBounds(220, 170, 100, 20);
+        panel.add(feedbackLabel);
+
+        // Mix Knob
+        JKnob mixKnob = new JKnob(new Color(70, 70, 70), Color.BLACK);
+        mixKnob.setRange(0.0, 1.0);
+        mixKnob.addKnobListener(value -> {
+            DelayVerb delayVerb = (DelayVerb) effectController.getCurrentEffect();
+            delayVerb.setMix((float) value);
+        });
+        mixKnob.setBounds(350, 70, 100, 100);
+        panel.add(mixKnob);
+
+        JLabel mixLabel = new JLabel("Mix");
+        mixLabel.setForeground(Color.WHITE);
+        mixLabel.setBounds(370, 170, 100, 20);
+        panel.add(mixLabel);
+
+        // Stereo mode switch
+        JButton stereoButton = new JButton("Wide Mode");
+        stereoButton.addActionListener(e -> {
+            DelayVerb delayVerb = (DelayVerb) effectController.getCurrentEffect();
+            delayVerb.setStereoMode();
+        });
+        stereoButton.setBounds(200, 200, 120, 30);
+        panel.add(stereoButton);
     }
 
 
@@ -172,7 +239,7 @@ public class GUIFrontendStuff extends JFrame {
 
     private JPanel createADSRPanel() {
         JPanel panel = new JPanel();
-        panel.setLayout(null);
+        panel.setLayout(null); // Use absolute positioning
         panel.setBackground(new Color(30, 30, 30));
         panel.setBorder(BorderFactory.createLineBorder(new Color(150, 150, 150), 2));
 
@@ -185,61 +252,75 @@ public class GUIFrontendStuff extends JFrame {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(Color.GREEN);
                 g2.setStroke(new BasicStroke(2));
-                int[] xPoints = {0, (int) (Voice.getAttackTime()), 150, 250, 300};
+
+                // Example graph points (adjust for your ADSR envelope)
+                int[] xPoints = {0, 50, 150, 250, 300};
                 int[] yPoints = {200, 50, 100, 100, 200};
                 g2.drawPolyline(xPoints, yPoints, xPoints.length);
             }
         };
-        graphPanel.setBounds(10, 10, 480, 200);
+        graphPanel.setBounds(10, 10, 380, 200); // Smaller height to fit knobs below
         graphPanel.setBackground(new Color(20, 20, 20));
         panel.add(graphPanel);
 
-        // ADSR Knobs
-        JPanel attackKnob = createKnobPanel("Attack", Voice::setAttackTime);
-        attackKnob.setBounds(20, 220, 80, 60);
-
-        JPanel decayKnob = createKnobPanel("Decay", Voice::setDecayTime);
-        decayKnob.setBounds(120, 220, 80, 60);
-
-        JPanel sustainKnob = createKnobPanel("Sustain", Voice::setSustainLevel);
-        sustainKnob.setBounds(220, 220, 80, 60);
-
-        JPanel releaseKnob = createKnobPanel("Release", Voice::setReleaseTime);
-        releaseKnob.setBounds(320, 220, 80, 60);
-
+        // Attack Knob
+        JKnob attackKnob = new JKnob(new Color(70, 70, 70), Color.BLACK);
+        attackKnob.setRange(1, 5000);
+        attackKnob.setRadius(25);
+        attackKnob.addKnobListener(value -> Voice.setAttackTime(value));
+        attackKnob.setBounds(20, 220, 80, 80);
         panel.add(attackKnob);
+
+        JLabel attackLabel = new JLabel("Attack");
+        attackLabel.setForeground(Color.WHITE);
+        attackLabel.setBounds(25, 270, 80, 20);
+        panel.add(attackLabel);
+
+        // Decay Knob
+        JKnob decayKnob = new JKnob(new Color(70, 70, 70), Color.BLACK);
+        decayKnob.setRange(1, 5000);
+        decayKnob.setRadius(25);
+        decayKnob.addKnobListener(value -> Voice.setDecayTime(value));
+        decayKnob.setBounds(120, 220, 80, 80);
         panel.add(decayKnob);
+
+        JLabel decayLabel = new JLabel("Decay");
+        decayLabel.setForeground(Color.WHITE);
+        decayLabel.setBounds(125, 270, 80, 20);
+        panel.add(decayLabel);
+
+        // Sustain Knob
+        JKnob sustainKnob = new JKnob(new Color(70, 70, 70), Color.BLACK);
+        sustainKnob.setRange(0.0, 1.0);
+        sustainKnob.setDefaultPosition(false,false,true);
+        sustainKnob.setRadius(25);
+        sustainKnob.addKnobListener(value -> Voice.setSustainLevel(value));
+        sustainKnob.setBounds(220, 220, 80, 80);
         panel.add(sustainKnob);
+
+        JLabel sustainLabel = new JLabel("Sustain");
+        sustainLabel.setForeground(Color.WHITE);
+        sustainLabel.setBounds(225, 270, 80, 20);
+        panel.add(sustainLabel);
+
+        // Release Knob
+        JKnob releaseKnob = new JKnob(new Color(70, 70, 70), Color.BLACK);
+        releaseKnob.setRange(1, 5000);
+        releaseKnob.setRadius(25);
+        releaseKnob.addKnobListener(value -> Voice.setReleaseTime(value));
+        releaseKnob.setBounds(320, 220, 80, 80);
         panel.add(releaseKnob);
 
-        return panel;
-    }
+        JLabel releaseLabel = new JLabel("Release");
+        releaseLabel.setForeground(Color.WHITE);
+        releaseLabel.setBounds(325, 270, 80, 20);
+        panel.add(releaseLabel);
 
 
-    private JPanel createKnobPanel(String label, java.util.function.DoubleConsumer valueSetter) {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
-        panel.setOpaque(false);
-
-        // JKnob
-        JKnob knob = new JKnob(new Color(70, 70, 70), Color.BLACK);
-        knob.setRadius(20);
-
-        // Add listener to update ADSR value
-        knob.addKnobListener(valueSetter);
-
-
-        // Knob Label
-        JLabel knobLabel = new JLabel(label, SwingConstants.LEFT);
-        knobLabel.setForeground(Color.WHITE);
-        knobLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
-
-        // Add JKnob and Label
-        panel.add(knob, BorderLayout.CENTER);
-        panel.add(knobLabel, BorderLayout.SOUTH);
 
         return panel;
     }
+
 
 
     private JPanel createFooterPanel() {

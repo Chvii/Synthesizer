@@ -67,42 +67,44 @@ public class Mixer{
 
             while (true) {
                 Arrays.fill(mixBuffer, 0);
-                // Process each voice in parallel
-                List<Future<float[]>> futures = activeVoices.stream()
-                        .map(voice -> executor.submit(voice::generateAudio))
-                        .toList();
-                int activeVoiceCount = activeVoices.size();
-                if (activeVoiceCount > 0) {
+
+                // Process voices only if active
+                if (!activeVoices.isEmpty()) {
+                    List<Future<float[]>> futures = activeVoices.stream()
+                            .map(voice -> executor.submit(voice::generateAudio))
+                            .toList();
+
                     for (int i = 0; i < mixBuffer.length; i++) {
                         for (Future<float[]> future : futures) {
                             try {
                                 float[] voiceBuffer = future.get();
-                                mixBuffer[i] += voiceBuffer[i] / 6;
+                                mixBuffer[i] += voiceBuffer[i]/6;
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
                         }
                     }
-                    // woohey effect shit
-                    mixBuffer = effectRack.applyEffect(mixBuffer);
-                    // Clamp to [-1.0, 1.0]
-                    for (int i = 0; i < mixBuffer.length; i++) {
-                        mixBuffer[i] = Math.max(-1.0f, Math.min(1.0f, mixBuffer[i]));
-                    }
-                    notifyWaveformUpdate(mixBuffer);
-
                 }
+
+                // Ensure silence buffers still go through effects
+                mixBuffer = effectRack.applyEffect(mixBuffer);
+
+                // Clamp and output
+                for (int i = 0; i < mixBuffer.length; i++) {
+                    mixBuffer[i] = Math.max(-1.0f, Math.min(1.0f, mixBuffer[i]));
+                }
+
                 notifyWaveformUpdate(mixBuffer);
-                // Convert mixBuffer to byte array
+
                 for (int i = 0; i < mixBuffer.length; i++) {
                     int intSample = (int) (mixBuffer[i] * 32767);
                     byteBuffer[i * 2] = (byte) ((intSample >> 8) & 0xFF);
                     byteBuffer[i * 2 + 1] = (byte) (intSample & 0xFF);
                 }
                 line.write(byteBuffer, 0, byteBuffer.length);
-                activeVoices.stream()
-                        .filter(v -> v.isStopped() == true)
-                        .forEach(activeVoices::remove);
+
+                // Clean up stopped voices
+                activeVoices.removeIf(Voice::isStopped);
             }
         }).start();
     }

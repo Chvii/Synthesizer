@@ -81,25 +81,25 @@ public class Voice {
         return keyChar;
     }
     public static void setAttackTime(double time){
-        attackTime = time*0.00005;
+        attackTime = 0.1/time;
     }
     public static double getAttackTime(){
         return attackTime;
     }
     public static void setDecayTime(double time){
-        decayTime = time*0.00001;
+        decayTime = 0.1/time;
     }
     public static double getDecayTime() {
         return decayTime;
     }
     public static void setSustainLevel(double level){
-        sustainLevel = 1.0 - (level / 100.0);
+        sustainLevel = level;
     }
     public static double getSustainLevel() {
             return sustainLevel;
     }
     public static void setReleaseTime(double time){
-        releaseTime = time*0.00001;
+        releaseTime = 0.1/time;
     }
     public static double getReleaseTime(){
         return releaseTime;

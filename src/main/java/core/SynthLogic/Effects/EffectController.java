@@ -12,4 +12,8 @@ public class EffectController {
     public void changeEffect(EffectPicker.EffectEnums effectEnum) {
         effectPicker.setEffect(effectEnum);
     }
+
+    public EffectRack getCurrentEffect() {
+        return effectPicker.getCurrentEffect();
+    }
 }

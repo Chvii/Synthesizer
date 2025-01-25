@@ -11,29 +11,44 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
 
     private int radius = 50; // Radius of the knob
     private int spotRadius = 5; // Spot radius for visualization
-    private double minAngle = Math.PI + Math.PI / 4; // Default: bottom-left
-    private double maxAngle = 3 * Math.PI - Math.PI / 4; // Default: bottom-right
+    private double minAngle = Math.PI + Math.PI / 4; // Bottom-left
+    private double maxAngle = 3 * Math.PI - Math.PI / 4; // Bottom-right
 
     private double theta; // Current angle of the knob
+    private double minValue = 0.0; // Minimum value for the knob
+    private double maxValue = 1.0; // Maximum value for the knob
+    private double currentValue; // Current value of the knob
     private Color knobColor;
     private Color spotColor;
-    private double modifierParameter = 1;
     private DoubleConsumer valueSetter;
 
     private boolean pressedOnKnob; // Track if the user clicked on the knob
     private int lastY; // Track the last y-coordinate of the mouse
 
-    /**
-     * Constructor that initializes the position of the knob.
-     */
-    public JKnob(Color initKnobColor, Color initSpotColor) {
+    public JKnob(Color knobColor, Color spotColor) {
         this.theta = minAngle;
-        this.knobColor = initKnobColor;
-        this.spotColor = initSpotColor;
+        this.knobColor = knobColor;
+        this.spotColor = spotColor;
         this.pressedOnKnob = false;
 
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
+    }
+
+    public void setRange(double minValue, double maxValue) {
+        this.minValue = minValue;
+        this.maxValue = maxValue;
+    }
+    public void setDefaultPosition(boolean counterclockwise, boolean middle, boolean clockwise){
+        if(counterclockwise){
+            theta = Math.PI + Math.PI / 4;
+        }
+        if(middle){
+            theta = (3 * Math.PI - Math.PI / 4) - (Math.PI + Math.PI / 4);
+        }
+        if(clockwise){
+            theta = 3 * Math.PI - Math.PI / 4;
+        }
     }
 
     public void setRadius(int i){
@@ -118,18 +133,20 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
             theta = clampAngle(theta);
             lastY = currentY;
 
+            double normalizedValue = (theta - minAngle) / (maxAngle - minAngle);
+            currentValue = minValue + normalizedValue * (maxValue - minValue);
 
-            double normalizedValue = 100 - ((theta - minAngle) / (maxAngle - minAngle) * 100) +1;
-
-            // Call the value setter
             if (valueSetter != null) {
-                valueSetter.accept(normalizedValue);
+                valueSetter.accept(currentValue);
             }
 
             repaint();
         }
     }
 
+    public void addKnobListener(DoubleConsumer valueSetter) {
+        this.valueSetter = valueSetter;
+    }
 
     /**
      * Clamp the angle to ensure it stays between minAngle and maxAngle.
@@ -173,11 +190,8 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
         this.maxAngle = normalizeAngle(angle);
     }
     public double getModifierParameter(){
-        return modifierParameter;
-    }
-    public void addKnobListener(DoubleConsumer valueSetter) {
-        this.valueSetter = valueSetter;
-        repaint();
+        //return modifierParameter;
+        return 0;
     }
 
     // Unused mouse event handlers
