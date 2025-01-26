@@ -32,7 +32,12 @@ public class Note {
         return Double.hashCode(frequency);
     }
 
+    // for midi
+    public static final Note init = new Note(0.0);
 
+
+
+    // for keyboard
     public static final Note C4 = new Note(261.63);
     public static final Note Csharp4 = new Note(277.18);
     public static final Note D4 = new Note(293.66);

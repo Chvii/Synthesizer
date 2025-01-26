@@ -19,12 +19,16 @@ public class GUIFrontendStuff extends JFrame {
     private JLabel octaveStateLabel;
     private Tone tone;
     private EffectController effectController;
+    private double attackValueOnGraph;
+    private double decayValueOnGraph;
+    private double sustainValueOnGraph = 1;
+    private double releaseValueOnGraph;
     public GUIFrontendStuff(Mixer mixer, WaveformStrategyPicker waveformStrategyPicker, Tone tone, EffectController effectController) {
         this.waveformStrategyPicker = waveformStrategyPicker;
         this.tone = tone;
         this.effectController = effectController;
         // Frame Setup
-        setTitle("Synthesizer VST");
+        setTitle("core.SynthLogic.Flagzisizer VST");
         setSize(1000, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(null); // Absolute layout for custom positioning
@@ -231,15 +235,34 @@ public class GUIFrontendStuff extends JFrame {
         panel.add(stereoButton);
     }
 
-
-
-
-
-
+    private void setAttackValueOnGraph(double attackValueOnGraph){
+        this.attackValueOnGraph = attackValueOnGraph;
+    }
+    private double getAttackValueOnGraph(){
+        return attackValueOnGraph;
+    }
+    private void setDecayValueOnGraph(double decayValueOnGraph){
+        this.decayValueOnGraph = decayValueOnGraph;
+    }
+    private double getDecayValueOnGraph(){
+        return decayValueOnGraph;
+    }
+    private void setSustainValueOnGraph(double sustainValueOnGraph){
+        this.sustainValueOnGraph = sustainValueOnGraph;
+    }
+    private double getSustainValueOnGraph(){
+        return (1-sustainValueOnGraph)*200;
+    }
+    private void setReleaseValueOnGraph(double releaseValueOnGraph){
+        this.releaseValueOnGraph = releaseValueOnGraph;
+    }
+    private double getReleaseValueOnGraph(){
+        return releaseValueOnGraph;
+    }
 
     private JPanel createADSRPanel() {
         JPanel panel = new JPanel();
-        panel.setLayout(null); // Use absolute positioning
+        panel.setLayout(null);
         panel.setBackground(new Color(30, 30, 30));
         panel.setBorder(BorderFactory.createLineBorder(new Color(150, 150, 150), 2));
 
@@ -253,13 +276,23 @@ public class GUIFrontendStuff extends JFrame {
                 g2.setColor(Color.GREEN);
                 g2.setStroke(new BasicStroke(2));
 
-                // Example graph points (adjust for your ADSR envelope)
-                int[] xPoints = {0, 50, 150, 250, 300};
-                int[] yPoints = {200, 50, 100, 100, 200};
-                g2.drawPolyline(xPoints, yPoints, xPoints.length);
+                int[] xPoints = {
+                        0, /* initial pos*/
+                        (int) (getAttackValueOnGraph()/50), /* attack time */
+                        (int) (getAttackValueOnGraph()/50) + (int) (getDecayValueOnGraph()/50), /* decay time */
+                        280, /* release time */
+                        280 + (int) (getReleaseValueOnGraph()/50)};
+                int[] yPoints = {
+                        200, /* 0 volume at start */
+                        0, /* max volume after attack time */
+                        (int) getSustainValueOnGraph(), /* sustain level */
+                        (int) getSustainValueOnGraph(), /* sustain level, release start */
+                        200}; /* 0 volume after release */
+                g2.drawPolyline( xPoints, yPoints, xPoints.length);
+                repaint();
             }
         };
-        graphPanel.setBounds(10, 10, 380, 200); // Smaller height to fit knobs below
+        graphPanel.setBounds(10, 10, 380, 200);
         graphPanel.setBackground(new Color(20, 20, 20));
         panel.add(graphPanel);
 
@@ -268,6 +301,7 @@ public class GUIFrontendStuff extends JFrame {
         attackKnob.setRange(1, 5000);
         attackKnob.setRadius(25);
         attackKnob.addKnobListener(value -> Voice.setAttackTime(value));
+        attackKnob.addKnobGraphListener(value -> setAttackValueOnGraph(value));
         attackKnob.setBounds(20, 220, 80, 80);
         panel.add(attackKnob);
 
@@ -281,6 +315,7 @@ public class GUIFrontendStuff extends JFrame {
         decayKnob.setRange(1, 5000);
         decayKnob.setRadius(25);
         decayKnob.addKnobListener(value -> Voice.setDecayTime(value));
+        decayKnob.addKnobGraphListener(value -> setDecayValueOnGraph(value));
         decayKnob.setBounds(120, 220, 80, 80);
         panel.add(decayKnob);
 
@@ -295,6 +330,7 @@ public class GUIFrontendStuff extends JFrame {
         sustainKnob.setDefaultPosition(false,false,true);
         sustainKnob.setRadius(25);
         sustainKnob.addKnobListener(value -> Voice.setSustainLevel(value));
+        sustainKnob.addKnobGraphListener(value -> setSustainValueOnGraph(value));
         sustainKnob.setBounds(220, 220, 80, 80);
         panel.add(sustainKnob);
 
@@ -308,6 +344,7 @@ public class GUIFrontendStuff extends JFrame {
         releaseKnob.setRange(1, 5000);
         releaseKnob.setRadius(25);
         releaseKnob.addKnobListener(value -> Voice.setReleaseTime(value));
+        releaseKnob.addKnobGraphListener(value -> setReleaseValueOnGraph(value));
         releaseKnob.setBounds(320, 220, 80, 80);
         panel.add(releaseKnob);
 
@@ -315,8 +352,6 @@ public class GUIFrontendStuff extends JFrame {
         releaseLabel.setForeground(Color.WHITE);
         releaseLabel.setBounds(325, 270, 80, 20);
         panel.add(releaseLabel);
-
-
 
         return panel;
     }
@@ -327,7 +362,7 @@ public class GUIFrontendStuff extends JFrame {
         JPanel panel = new JPanel();
         panel.setBackground(new Color(20, 20, 20));
 
-        JLabel branding = new JLabel("Synthesizer VST by Flagz", SwingConstants.CENTER);
+        JLabel branding = new JLabel("core.SynthLogic.Flagzisizer VST by Flagz", SwingConstants.CENTER);
         branding.setForeground(new Color(200, 200, 200));
         branding.setFont(new Font("SansSerif", Font.ITALIC, 16));
         panel.add(branding);

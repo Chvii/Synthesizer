@@ -5,7 +5,6 @@ import core.WaveformStrategy.WaveformStrategy;
 
 public class Voice {
     private final Note note;
-    private final char keyChar;
     private volatile boolean isPlaying = true;
     private double phase = 0;
     private double volume = 0.0;
@@ -17,9 +16,9 @@ public class Voice {
     private static double sustainLevel = 1.0;
     private static double releaseTime = 0.1;
 
-    public Voice(Note note, char keyChar, WaveformStrategy waveformStrategy) {
+    public Voice(Note note, WaveformStrategy waveformStrategy) {
         this.note = note;
-        this.keyChar = keyChar;
+
         this.waveformStrategy = waveformStrategy;
     }
 
@@ -77,9 +76,6 @@ public class Voice {
         return this.note;
     }
 
-    public char getKeyChar() {
-        return keyChar;
-    }
     public static void setAttackTime(double time){
         attackTime = 0.1/time;
     }

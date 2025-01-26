@@ -20,6 +20,9 @@ public class Mixer{
     private final ExecutorService executor;
     private final List<WaveformUpdateListener> listeners = new ArrayList<>();
     private EffectRack effectRack;
+    private final ThreadLocal<float[]> threadLocalMixBuffer = ThreadLocal.withInitial(() -> new float[ConstantValues.BUFFER_SIZE]);
+    private final ThreadLocal<byte[]> threadLocalByteBuffer = ThreadLocal.withInitial(() -> new byte[ConstantValues.BUFFER_SIZE*2]);
+
 
 
     public Mixer(SourceDataLine line, EffectRack effectRack) {
@@ -44,15 +47,15 @@ public class Mixer{
         activeVoices.add(voice);
     }
 
-    public void removeVoice(char keyChar) {
+    public void removeVoice(Note note) {
         activeVoices.stream()
-                .filter(v -> v.getKeyChar() == keyChar)
+                .filter(v -> v.getNote() == note)
                 .forEach(Voice::stopVoice);
 
     }
-    public void overrideVoice(char keyChar){
+    public void overrideVoice(Note note){
         activeVoices.stream()
-                .filter(v -> v.getKeyChar() == keyChar)
+                .filter(v -> v.getNote() == note)
                 .forEach(activeVoices::remove);
     }
 
@@ -62,8 +65,8 @@ public class Mixer{
 
     public synchronized void start() {
         new Thread(() -> {
-            float[] mixBuffer = new float[ConstantValues.BUFFER_SIZE];
-            byte[] byteBuffer = new byte[ConstantValues.BUFFER_SIZE *2];
+            float[] mixBuffer = threadLocalMixBuffer.get();
+            byte[] byteBuffer = threadLocalByteBuffer.get();
 
             while (true) {
                 Arrays.fill(mixBuffer, 0);
@@ -78,7 +81,7 @@ public class Mixer{
                         for (Future<float[]> future : futures) {
                             try {
                                 float[] voiceBuffer = future.get();
-                                mixBuffer[i] += voiceBuffer[i]/6;
+                                mixBuffer[i] += voiceBuffer[i]/7;
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }

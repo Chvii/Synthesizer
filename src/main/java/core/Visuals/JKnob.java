@@ -21,6 +21,7 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
     private Color knobColor;
     private Color spotColor;
     private DoubleConsumer valueSetter;
+    private FunctionalValueSetter graphValueSetter;
 
     private boolean pressedOnKnob; // Track if the user clicked on the knob
     private int lastY; // Track the last y-coordinate of the mouse
@@ -139,6 +140,9 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
             if (valueSetter != null) {
                 valueSetter.accept(currentValue);
             }
+            if (graphValueSetter != null) {
+                graphValueSetter.accept(currentValue);
+            }
 
             repaint();
         }
@@ -146,6 +150,10 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
 
     public void addKnobListener(DoubleConsumer valueSetter) {
         this.valueSetter = valueSetter;
+    }
+
+    public void addKnobGraphListener(FunctionalValueSetter graphValueSetter) {
+        this.graphValueSetter = graphValueSetter;
     }
 
     /**

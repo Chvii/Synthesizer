@@ -22,13 +22,12 @@ public class Tone {
         return mixer;
     }
 
-    public void play(Note note, char keyChar) {
-        if (mixer.getActiveVoices().stream().anyMatch(v -> v.getKeyChar() == keyChar)){
-            mixer.overrideVoice(keyChar);
+    public void play(Note note) { // TODO: Include midiKey as a parameter, or figure out how to implement octave switch with midi controller
+        if (mixer.getActiveVoices().stream().anyMatch(v -> v.getNote() == note)){
+            mixer.overrideVoice(note);
         }
         this.waveformStrategy = waveformStrategyPicker.chooseWaveformStrategy();
-
-        mixer.addVoice(new Voice(note, keyChar, waveformStrategy));
+        mixer.addVoice(new Voice(note, waveformStrategy));
     }
     public void setWaveformStrategy(WaveformStrategy waveformStrategy){
         this.waveformStrategy = waveformStrategy;
@@ -36,8 +35,8 @@ public class Tone {
 
 
 
-    public void stop(char keyChar) {
-        mixer.removeVoice(keyChar);
+    public void stop(Note note) { // TODO: Include midiKey as a parameter, or figure out how to implement octave switch with midi controller
+        mixer.removeVoice(note);
     }
 
     public void increaseOctave() {
