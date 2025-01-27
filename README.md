@@ -7,32 +7,16 @@ This is by no means pretty or well-organised code (and I am sure my professors w
 fast as possible), but it does what a very (VERY) basic synthesizer should do. Has the 4 standard wavetable forms (sine, triangle, saw, square). And allows for easy integration of new wavetables. (I tried getting this to work with a GUI button for switching wavetables - but for some reason the JFrame button broke the sound engine! (It took a long time to figure out that the button was the culprit behind the sound suddenly not working, I guess this is why we unit test)).
 
 
-* Notes are linked to the keyboard, FL Studio style:
-q: C
-2: C#
-w: D
-3: D#
-e: E
-r: F
-5: F#
-t: G
-6: G#
-y: A
-7: A#
-u: B
-i: C
-9: C#
-o: D
-0: D#
-p: E
+* Notes are linked to the keyboard, FL Studio style.
+* **MIDI CONTROLLERS ARE NOW SUPPORTED**
 
 ## ROADMAP
-* Use float instead of byte for cleaner audio. (DONE)
-* Add ADSR functionality.
+* Use float instead of byte for cleaner audio. **(DONE)**
+* Add ADSR functionality. **(DONE)**
 * Add different kinds of waveform mutators (FM, RM, the whole lot).
-* Add support for MIDI (NO idea how to do that -- yet).
-* Make a GUI for interacting with the synthesizer. (ONGOING)
-* Implement different effects (reverb, delay, saturation, chorus).
+* Add support for MIDI (NO idea how to do that -- yet). **(DONE)**
+* Make a GUI for interacting with the synthesizer. **(ONGOING)**
+* Implement different effects (reverb, delay, saturation, chorus). **(ONGOING)**
 * Add a sequencer with an intuitive GUI.
 * Figure out how to make a filter.
 * Re-assignable LFO.
