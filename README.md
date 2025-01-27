@@ -11,7 +11,7 @@ fast as possible), but it does what a very (VERY) basic synthesizer should do. H
 * **MIDI CONTROLLERS ARE NOW SUPPORTED**
 
 ## ROADMAP
-* Use float instead of byte for cleaner audio. **(DONE)**
+* Use double instead of byte for cleaner audio. **(DONE)**
 * Add ADSR functionality. **(DONE)**
 * Add different kinds of waveform mutators (FM, RM, the whole lot).
 * Add support for MIDI (NO idea how to do that -- yet). **(DONE)**

@@ -13,8 +13,8 @@ public class EffectPicker implements EffectRack {
         effectMap.put(EffectEnums.DESTRUCTION, new DestructionEffect());
         effectMap.put(EffectEnums.NOISE, new NoiseEffect());
         effectMap.put(EffectEnums.NONE, new NullEffect());
-        effectMap.put(EffectEnums.DELAYVERB, new DelayVerb(0.5f, 0.5f, 0.3f,false));
-        effectMap.put(EffectEnums.FILTER, new FilterEffect(1f, 0.5f));
+        effectMap.put(EffectEnums.DELAYVERB, new DelayVerb(0.5, 0.5, 0.3,false));
+        effectMap.put(EffectEnums.FILTER, new FilterEffect(1, 0.5));
     }
 
     public void setEffect(EffectEnums effectEnum) {
@@ -26,7 +26,7 @@ public class EffectPicker implements EffectRack {
     }
 
     @Override
-    public float[] applyEffect(float[] mixBuffer) {
+    public double[] applyEffect(double[] mixBuffer) {
         return currentEffect.applyEffect(mixBuffer);
     }
 }

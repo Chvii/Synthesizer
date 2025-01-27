@@ -15,8 +15,8 @@ public class Note {
     public void setFrequency(double frequency) {
         this.frequency = frequency;
     }
-    public Note modulateFrequency(double modulator){
-        return new Note(frequency * modulator);
+    public void modulateFrequency(double modulator){
+        setFrequency(frequency * modulator);
     }
     @Override
     public boolean equals(Object o) {

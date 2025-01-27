@@ -20,7 +20,7 @@ public class Mixer{
     private final ExecutorService executor;
     private final List<WaveformUpdateListener> listeners = new ArrayList<>();
     private EffectRack effectRack;
-    private final ThreadLocal<float[]> threadLocalMixBuffer = ThreadLocal.withInitial(() -> new float[ConstantValues.BUFFER_SIZE]);
+    private final ThreadLocal<double[]> threadLocalMixBuffer = ThreadLocal.withInitial(() -> new double[ConstantValues.BUFFER_SIZE]);
     private final ThreadLocal<byte[]> threadLocalByteBuffer = ThreadLocal.withInitial(() -> new byte[ConstantValues.BUFFER_SIZE*2]);
 
 
@@ -37,7 +37,7 @@ public class Mixer{
     public void removeWaveformUpdateListener(WaveformUpdateListener listener) {
         listeners.remove(listener);
     }
-    private void notifyWaveformUpdate(float[] mixBuffer) {
+    private void notifyWaveformUpdate(double[] mixBuffer) {
         for (WaveformUpdateListener listener : listeners) {
             listener.updateWaveform(mixBuffer);
         }
@@ -65,7 +65,7 @@ public class Mixer{
 
     public synchronized void start() {
         new Thread(() -> {
-            float[] mixBuffer = threadLocalMixBuffer.get();
+            double[] mixBuffer = threadLocalMixBuffer.get();
             byte[] byteBuffer = threadLocalByteBuffer.get();
 
             while (true) {
@@ -73,14 +73,14 @@ public class Mixer{
 
                 // Process voices only if active
                 if (!activeVoices.isEmpty()) {
-                    List<Future<float[]>> futures = activeVoices.stream()
+                    List<Future<double[]>> futures = activeVoices.stream()
                             .map(voice -> executor.submit(voice::generateAudio))
                             .toList();
 
                     for (int i = 0; i < mixBuffer.length; i++) {
-                        for (Future<float[]> future : futures) {
+                        for (Future<double[]> future : futures) {
                             try {
-                                float[] voiceBuffer = future.get();
+                                double[] voiceBuffer = future.get();
                                 mixBuffer[i] += voiceBuffer[i]/7;
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -88,16 +88,7 @@ public class Mixer{
                         }
                     }
                 }
-
-                // Ensure silence buffers still go through effects
                 mixBuffer = effectRack.applyEffect(mixBuffer);
-
-
-                // Clamp and output
-                for (int i = 0; i < mixBuffer.length; i++) {
-                    mixBuffer[i] = Math.max(-1.0f, Math.min(1.0f, mixBuffer[i]));
-                }
-
                 notifyWaveformUpdate(mixBuffer);
 
                 for (int i = 0; i < mixBuffer.length; i++) {

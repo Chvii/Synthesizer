@@ -5,28 +5,28 @@ import core.Constants.ConstantValues;
 import java.util.Arrays;
 
 public class DelayVerb implements EffectRack {
-    private float[] delayBuffer;
+    private double[] delayBuffer;
     private int writeIndex = 0;
-    private float feedback;
-    private float mix;
-    private float delayTimeInSeconds;
+    private double feedback;
+    private double mix;
+    private double delayTimeInSeconds;
     private boolean stereoMode;
 
-    public DelayVerb(float delayTimeInSeconds, float feedback, float mix, boolean stereoMode) {
+    public DelayVerb(double delayTimeInSeconds, double feedback, double mix, boolean stereoMode) {
         this.delayTimeInSeconds = delayTimeInSeconds;
-        this.delayBuffer = new float[(int) (ConstantValues.SAMPLE_RATE * delayTimeInSeconds)];
+        this.delayBuffer = new double[(int) (ConstantValues.SAMPLE_RATE * delayTimeInSeconds)];
         this.feedback = feedback;
         this.mix = mix;
         this.stereoMode = stereoMode;
     }
 
     @Override
-    public float[] applyEffect(float[] mixBuffer) {
-        float[] outputBuffer = Arrays.copyOf(mixBuffer, mixBuffer.length);
+    public double[] applyEffect(double[] mixBuffer) {
+        double[] outputBuffer = Arrays.copyOf(mixBuffer, mixBuffer.length);
 
         for (int i = 0; i < mixBuffer.length; i++) {
-            float delayedSample = delayBuffer[writeIndex];
-            float newSample = mixBuffer[i] + delayedSample * feedback;
+            double delayedSample = delayBuffer[writeIndex];
+            double newSample = mixBuffer[i] + delayedSample * feedback;
             if(stereoMode){
                 if(i % 2 == 0){
                     newSample = -mixBuffer[i] + -delayedSample * -feedback;
@@ -40,13 +40,13 @@ public class DelayVerb implements EffectRack {
         return outputBuffer;
     }
 
-    public void setDelayTimeInSeconds(float delayTimeInSeconds) {
+    public void setDelayTimeInSeconds(double delayTimeInSeconds) {
         if (this.delayTimeInSeconds != delayTimeInSeconds) {
             this.delayTimeInSeconds = delayTimeInSeconds;
 
             // Resize the delay buffer
             int newSize = (int) (ConstantValues.SAMPLE_RATE * delayTimeInSeconds);
-            float[] newBuffer = new float[newSize];
+            double[] newBuffer = new double[newSize];
 
             // Copy the existing contents into the new buffer, if smaller
             if (newSize < delayBuffer.length) {
@@ -62,11 +62,11 @@ public class DelayVerb implements EffectRack {
         }
     }
 
-    public void setFeedback(float feedback) {
+    public void setFeedback(double feedback) {
         this.feedback = feedback;
     }
 
-    public void setMix(float mix) {
+    public void setMix(double mix) {
         this.mix = mix;
     }
     public void setStereoMode(){

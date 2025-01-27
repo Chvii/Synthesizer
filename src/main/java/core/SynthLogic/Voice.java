@@ -15,17 +15,18 @@ public class Voice {
     private static double decayTime = 0.1;
     private static double sustainLevel = 1.0;
     private static double releaseTime = 0.1;
-    private float velocity;
+    private double velocity;
+    private static double octave = 1;
 
-    public Voice(Note note, float velocity, WaveformStrategy waveformStrategy) {
+    public Voice(Note note, double velocity, WaveformStrategy waveformStrategy) {
         this.note = note;
         this.velocity = velocity;
 
         this.waveformStrategy = waveformStrategy;
     }
 
-    public synchronized float[] generateAudio() {
-        float[] buffer = new float[ConstantValues.BUFFER_SIZE];
+    public synchronized double[] generateAudio() {
+        double[] buffer = new double[ConstantValues.BUFFER_SIZE];
         if(attackPhase && isPlaying){
             volume += attackTime;
         }
@@ -43,13 +44,13 @@ public class Voice {
 
         if (volume <= 0.0) return buffer;
 
-        double step = 2 * Math.PI * note.getFrequency() / ConstantValues.SAMPLE_RATE;
+        double step = 2 * Math.PI * note.getFrequency() / ConstantValues.SAMPLE_RATE * octave;
 
         for (int i = 0; i < buffer.length; i++) {
             if(velocity<20){
-                velocity = 20f;
+                velocity = 20;
             }
-            buffer[i] = (float) waveformStrategy.generateSample(phase, volume)*(velocity/100f);
+            buffer[i] = (double) waveformStrategy.generateSample(phase, volume)*(velocity/100);
             phase += step;
             if (phase > 2 * Math.PI) phase -= 2 * Math.PI;
         }
@@ -79,6 +80,20 @@ public class Voice {
     }
     public Note getNote(){
         return this.note;
+    }
+    public static void increaseOctave() {
+        octave = octave * 2;
+    }
+
+    public static void decreaseOctave() {
+        octave = octave / 2;
+    }
+
+    public static double getOctave() {
+        return octave;
+    }
+    public static String getOctaveString(){
+        return String.valueOf(octave);
     }
 
     public static void setAttackTime(double time){

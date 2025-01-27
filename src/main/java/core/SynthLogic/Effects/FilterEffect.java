@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FilterEffect implements EffectRack {
-    private final float MIN_FREQUENCY = 20.0f; // Minimum cutoff frequency (20 Hz)
-    private final float MAX_FREQUENCY = 20000.0f; // Maximum cutoff frequency (20,000 Hz)
-    private float knobPosition;
-    private float cutoffFrequency;
-    private float resonance; // Resonance (Q factor)
+    private final double MIN_FREQUENCY = 20.0; // Minimum cutoff frequency (20 Hz)
+    private final double MAX_FREQUENCY = 20000.0; // Maximum cutoff frequency (20,000 Hz)
+    private double knobPosition;
+    private double cutoffFrequency;
+    private double resonance; // Resonance (Q factor)
     private int filterStages; // Number of filter stages for roll-off intensity
     private List<BiquadFilterStage> stages; // List of filter stages for chaining
 
@@ -35,7 +35,7 @@ public class FilterEffect implements EffectRack {
      *                     counter-clockwise to decrease cutoff frequency
      * @param resonance Resonance bump (Q factor). 0.5 for no bump, 0.707 for Butterworth.
      */
-    public FilterEffect(float knobPosition, float resonance) {
+    public FilterEffect(double knobPosition, double resonance) {
         this.knobPosition = knobPosition;
         this.resonance = resonance;
         this.cutoffFrequency = calculateCutoff(knobPosition); // Initialize cutoff frequency
@@ -43,7 +43,7 @@ public class FilterEffect implements EffectRack {
         setIntensity(FilterIntensity._12); // Default to 12 dB/octave
     }
 
-    public void setCutoff(float knobPosition) {
+    public void setCutoff(double knobPosition) {
         this.cutoffFrequency = calculateCutoff(knobPosition);
         for (BiquadFilterStage stage : stages) {
             stage.updateCoefficients(cutoffFrequency, resonance);
@@ -51,8 +51,8 @@ public class FilterEffect implements EffectRack {
         System.out.println(cutoffFrequency);
     }
 
-    private float calculateCutoff(float knobPosition) {
-        return MIN_FREQUENCY * (float) Math.pow(MAX_FREQUENCY / MIN_FREQUENCY, knobPosition);
+    private double calculateCutoff(double knobPosition) {
+        return MIN_FREQUENCY * (double) Math.pow(MAX_FREQUENCY / MIN_FREQUENCY, knobPosition);
     }
 
     /**
@@ -70,21 +70,21 @@ public class FilterEffect implements EffectRack {
     }
 
     @Override
-    public float[] applyEffect(float[] mixBuffer) {
+    public double[] applyEffect(double[] mixBuffer) {
         for (BiquadFilterStage stage : stages) {
             mixBuffer = stage.applyStage(mixBuffer);
         }
         return mixBuffer;
     }
 
-    public void setCutoffFrequency(float cutoffFrequency) {
+    public void setCutoffFrequency(double cutoffFrequency) {
         this.cutoffFrequency = cutoffFrequency;
         for (BiquadFilterStage stage : stages) {
             stage.updateCoefficients(cutoffFrequency, resonance);
         }
     }
 
-    public void setResonance(float resonance) {
+    public void setResonance(double resonance) {
         this.resonance = resonance;
         for (BiquadFilterStage stage : stages) {
             stage.updateCoefficients(cutoffFrequency, resonance);
@@ -95,29 +95,29 @@ public class FilterEffect implements EffectRack {
      * Nested class for a biquad filter stage.
      */
     private static class BiquadFilterStage {
-        private float cutoffFrequency;
-        private float resonance;
-        private float inputCoefficient0, inputCoefficient1, inputCoefficient2;
-        private float feedbackCoefficient1, feedbackCoefficient2;
-        private float previousInputSample1, previousInputSample2;
-        private float previousOutputSample1, previousOutputSample2;
+        private double cutoffFrequency;
+        private double resonance;
+        private double inputCoefficient0, inputCoefficient1, inputCoefficient2;
+        private double feedbackCoefficient1, feedbackCoefficient2;
+        private double previousInputSample1, previousInputSample2;
+        private double previousOutputSample1, previousOutputSample2;
 
-        public BiquadFilterStage(float cutoffFrequency, float resonance) {
+        public BiquadFilterStage(double cutoffFrequency, double resonance) {
             this.cutoffFrequency = cutoffFrequency;
             this.resonance = resonance;
             calculateCoefficients();
         }
 
         private void calculateCoefficients() {
-            float angularFrequency = (float) (2 * Math.PI * cutoffFrequency / ConstantValues.SAMPLE_RATE);
-            float alpha = (float) Math.sin(angularFrequency) / (2 * resonance);
-            float cosAngularFrequency = (float) Math.cos(angularFrequency);
+            double angularFrequency = (double) (2 * Math.PI * cutoffFrequency / ConstantValues.SAMPLE_RATE);
+            double alpha = (double) Math.sin(angularFrequency) / (2 * resonance);
+            double cosAngularFrequency = (double) Math.cos(angularFrequency);
 
             inputCoefficient0 = (1 - cosAngularFrequency) / 2;
             inputCoefficient1 = 1 - cosAngularFrequency;
             inputCoefficient2 = (1 - cosAngularFrequency) / 2;
 
-            float normalizationFactor = 1 + alpha;
+            double normalizationFactor = 1 + alpha;
             feedbackCoefficient1 = -2 * cosAngularFrequency / normalizationFactor;
             feedbackCoefficient2 = (1 - alpha) / normalizationFactor;
 
@@ -126,12 +126,12 @@ public class FilterEffect implements EffectRack {
             inputCoefficient2 /= normalizationFactor;
         }
 
-        public float[] applyStage(float[] mixBuffer) {
+        public double[] applyStage(double[] mixBuffer) {
             for (int i = 0; i < mixBuffer.length; i++) {
-                float currentInput = mixBuffer[i];
+                double currentInput = mixBuffer[i];
 
                 // Apply the biquad filter equation
-                float currentOutput = inputCoefficient0 * currentInput
+                double currentOutput = inputCoefficient0 * currentInput
                         + inputCoefficient1 * previousInputSample1
                         + inputCoefficient2 * previousInputSample2
                         - feedbackCoefficient1 * previousOutputSample1
@@ -149,7 +149,7 @@ public class FilterEffect implements EffectRack {
             return mixBuffer;
         }
 
-        public void updateCoefficients(float cutoffFrequency, float resonance) {
+        public void updateCoefficients(double cutoffFrequency, double resonance) {
             this.cutoffFrequency = cutoffFrequency;
             this.resonance = resonance;
             calculateCoefficients();

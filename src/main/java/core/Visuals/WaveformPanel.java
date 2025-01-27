@@ -8,14 +8,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class WaveformPanel extends JPanel implements WaveformUpdateListener {
     private static final int MAX_SAMPLES = 1024; // Rolling buffer size
-    private final CopyOnWriteArrayList<Float> waveformBuffer; // Holds normalized samples
+    private final CopyOnWriteArrayList<Double> waveformBuffer; // Holds normalized samples
     private Color waveformColor = new Color(0, 153, 255); // Sleek blue for the waveform
     private Color backgroundColor = Color.BLACK; // Elegant black background
     private int updateRate = 60; // FPS cap for rendering
-    private float maxAmplitude = 1.0f; // Dynamic amplitude scaling
+    private double maxAmplitude = 1.0; // Dynamic amplitude scaling
 
     public WaveformPanel() {
-        this.waveformBuffer = new CopyOnWriteArrayList<>(Arrays.asList(new Float[MAX_SAMPLES]));
+        this.waveformBuffer = new CopyOnWriteArrayList<>(Arrays.asList(new Double[MAX_SAMPLES]));
         setPreferredSize(new Dimension(800, 200)); // Default size
         setBackground(backgroundColor);
 
@@ -29,15 +29,15 @@ public class WaveformPanel extends JPanel implements WaveformUpdateListener {
      * @param newSamples The new audio samples to display.
      */
     @Override
-    public void updateWaveform(float[] newSamples) {
+    public void updateWaveform(double[] newSamples) {
         synchronized (waveformBuffer) {
-            for (float sample : newSamples) {
+            for (double sample : newSamples) {
                 waveformBuffer.add(sample);
                 if (waveformBuffer.size() > MAX_SAMPLES) {
                     waveformBuffer.remove(0);
                 }
             }
-            float maxSample = 1.0f;
+            double maxSample = 1.0;
             maxAmplitude = Math.max(maxAmplitude, maxSample);
         }
     }
@@ -64,17 +64,17 @@ public class WaveformPanel extends JPanel implements WaveformUpdateListener {
                 int width = getWidth();
                 int height = getHeight();
                 int centerY = height / 2;
-                float xStep = (float) width / (float) MAX_SAMPLES;
+                double xStep = (double) width / (double) MAX_SAMPLES;
 
                 // Draw connected lines for the waveform
                 for (int i = 0; i < waveformBuffer.size() - 1; i++) {
-                    float x1 = i * xStep;
-                    float x2 = (i + 1) * xStep;
+                    double x1 = i * xStep;
+                    double x2 = (i + 1) * xStep;
 
-                    float y1 = centerY - waveformBuffer.get(i) * (centerY - 10); // Scale to panel height
-                    float y2 = centerY - waveformBuffer.get(i + 1) * (centerY - 10);
+                    double y1 = centerY - waveformBuffer.get(i) * (centerY - 10); // Scale to panel height
+                    double y2 = centerY - waveformBuffer.get(i + 1) * (centerY - 10);
 
-                    g2d.draw(new Line2D.Float(x1, y1, x2, y2));
+                    g2d.draw(new Line2D.Double(x1, y1, x2, y2));
                 }
             }
         }

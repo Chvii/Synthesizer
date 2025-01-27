@@ -2,7 +2,7 @@ package core.SynthLogic.Effects;
 
 public class NullEffect implements EffectRack{
     @Override
-    public float[] applyEffect(float[] mixBuffer) {
+    public double[] applyEffect(double[] mixBuffer) {
         return mixBuffer;
     }
 }

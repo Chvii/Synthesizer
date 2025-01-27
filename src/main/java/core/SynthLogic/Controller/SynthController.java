@@ -92,13 +92,13 @@ public class SynthController implements Receiver {
         if (keyNoteMap.containsKey(key) && !listOfKeys.contains(key)) {
             listOfKeys.add(key);
             Note note = keyNoteMap.get(key);
+
             tone.play(note,100);
         }
     }
     private void handleKeyRelease(char key) {
         if (keyNoteMap.containsKey(key)) {
             Note note = keyNoteMap.get(key);
-
             tone.stop(note);
             listOfKeys.removeIf(k -> k == key);
         }
@@ -425,6 +425,6 @@ public class SynthController implements Receiver {
     }
 
     private int midiChannelToInt(MidiMessage message) {
-        return (message.getStatus() & 0x0f) + 1;
+        return (message.getStatus() & 0x0) + 1;
     }
 }
