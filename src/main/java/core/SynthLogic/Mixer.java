@@ -92,6 +92,7 @@ public class Mixer{
                 // Ensure silence buffers still go through effects
                 mixBuffer = effectRack.applyEffect(mixBuffer);
 
+
                 // Clamp and output
                 for (int i = 0; i < mixBuffer.length; i++) {
                     mixBuffer[i] = Math.max(-1.0f, Math.min(1.0f, mixBuffer[i]));

@@ -8,6 +8,8 @@ import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Transmitter;
+import javax.xml.crypto.NoSuchMechanismException;
+import java.security.Key;
 
 /**
  * Create a connection between a musical keyboard (transmitter) and an internal
@@ -44,6 +46,11 @@ public class KeyboardToSynth {
 
         // Get a transmitter and synthesizer from their device names
         // using system properties or defaults
+        if(getTransmitter() == null){
+            while(true){
+                //
+            }
+        }
         Transmitter trans = getTransmitter();
         Synthesizer synth = getSynthesizer();
 
@@ -107,8 +114,6 @@ public class KeyboardToSynth {
         try {
             return MidiSystem.getTransmitter();
         } catch (MidiUnavailableException e) {
-            System.err.println("Error getting transmitter");
-            e.printStackTrace();
             return null;
         }
     }

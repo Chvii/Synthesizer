@@ -92,7 +92,7 @@ public class SynthController implements Receiver {
         if (keyNoteMap.containsKey(key) && !listOfKeys.contains(key)) {
             listOfKeys.add(key);
             Note note = keyNoteMap.get(key);
-            tone.play(note);
+            tone.play(note,100);
         }
     }
     private void handleKeyRelease(char key) {
@@ -119,7 +119,7 @@ public class SynthController implements Receiver {
         Note note = midiNoteMap.get(key);
         if (note != null) {
             System.out.println("PLAYING KEY: " + key);
-            tone.play(note);
+            tone.play(note, velocity);
         }
     }
 

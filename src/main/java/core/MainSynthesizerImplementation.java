@@ -10,6 +10,7 @@ import core.Visuals.GUIFrontendStuff;
 import core.WaveformStrategy.WaveformStrategyPicker;
 
 import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Receiver;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
@@ -28,6 +29,8 @@ public class MainSynthesizerImplementation {
         Mixer mixer = new Mixer(line, effectPicker); // Mixer uses the EffectPicker
         Tone tone = new Tone(line, waveformStrategyPicker,mixer);
         GUIFrontendStuff gui = new GUIFrontendStuff(mixer, waveformStrategyPicker, tone, effectController);
+        Receiver receiver = null;
+        SynthController synthController = new SynthController(receiver, tone);
         new KeyboardToSynth(tone).run();
     }
 }

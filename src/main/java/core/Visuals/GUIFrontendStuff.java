@@ -3,6 +3,7 @@ package core.Visuals;
 import core.SynthLogic.Effects.DelayVerb;
 import core.SynthLogic.Effects.EffectController;
 import core.SynthLogic.Effects.EffectPicker;
+import core.SynthLogic.Effects.FilterEffect;
 import core.SynthLogic.Mixer;
 import core.SynthLogic.Tone;
 import core.SynthLogic.Voice;
@@ -12,6 +13,7 @@ import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.logging.Filter;
 
 public class GUIFrontendStuff extends JFrame {
     private WaveformStrategyPicker waveformStrategyPicker;
@@ -167,7 +169,10 @@ public class GUIFrontendStuff extends JFrame {
             // Show knobs only for DelayVerb
             if (selectedEffect == EffectPicker.EffectEnums.DELAYVERB) {
                 addDelayVerbKnobs(panel);
-            } else {
+            } else if (selectedEffect == EffectPicker.EffectEnums.FILTER) {
+                addFilterKnobs(panel);
+            }
+            else {
                 panel.removeAll();
                 panel.add(effectDropdown); // Re-add dropdown
             }
@@ -177,6 +182,59 @@ public class GUIFrontendStuff extends JFrame {
         panel.add(effectDropdown);
 
         return panel;
+    }
+
+    private void addFilterKnobs(JPanel panel){
+        JKnob cutoffKnob = new JKnob(new Color(70, 70, 70),Color.BLACK);
+        cutoffKnob.setBounds(34,135,150,150);
+        cutoffKnob.setRange(0,1);
+        cutoffKnob.setRadius(60);
+        cutoffKnob.setDefaultPosition(false,false,true);
+        cutoffKnob.addKnobListener(value ->{
+            FilterEffect filterEffect = (FilterEffect) effectController.getCurrentEffect();
+            filterEffect.setCutoff((float) value);
+        });
+        panel.add(cutoffKnob);
+
+        JLabel cutoffLabel = new JLabel("Cutoff");
+        cutoffLabel.setFont(new Font("Helvetica", Font.ITALIC, 28));
+        cutoffLabel.setForeground(Color.white);
+        cutoffLabel.setBounds(50,60,100,100);
+        panel.add(cutoffLabel);
+
+        JComboBox<FilterEffect.FilterIntensity> filterSlopeMenu = new JComboBox<>(FilterEffect.FilterIntensity.values());
+        filterSlopeMenu.setSelectedIndex(1);
+        filterSlopeMenu.setFont(new Font("Helvetica", Font.BOLD,16));
+        filterSlopeMenu.setBounds(200,90,100,100);
+        filterSlopeMenu.addActionListener(value -> {
+            FilterEffect filterEffect = (FilterEffect) effectController.getCurrentEffect(); // this whole method is peak Java.
+            FilterEffect.FilterIntensity selectedSlope = (FilterEffect.FilterIntensity) filterSlopeMenu.getSelectedItem();
+            filterEffect.setIntensity(selectedSlope);
+        });
+        panel.add(filterSlopeMenu);
+
+        JLabel slopeMenuLabel = new JLabel();
+        slopeMenuLabel.setText("SLOPE");
+        slopeMenuLabel.setFont(new Font("Helvetica", Font.ITALIC, 16));
+        slopeMenuLabel.setForeground(Color.white);
+        slopeMenuLabel.setBounds(220,60, 100,100);
+        panel.add(slopeMenuLabel);
+
+        JKnob resonanceKnob = new JKnob(new Color(120,120,120),Color.BLACK);
+        resonanceKnob.setRange(0.5,1);
+        resonanceKnob.setRadius(30);
+        resonanceKnob.addKnobListener(value -> {
+            FilterEffect filterEffect = (FilterEffect) effectController.getCurrentEffect();
+            filterEffect.setResonance((float) value);
+        });
+        resonanceKnob.setBounds(220,200,100,100);
+        panel.add(resonanceKnob);
+
+        JLabel resonanceLabel = new JLabel("Resonance");
+        resonanceLabel.setFont(new Font("Helvetica", Font.ITALIC, 16));
+        resonanceLabel.setForeground(Color.white);
+        resonanceLabel.setBounds(208,135,100,100);
+        panel.add(resonanceLabel);
     }
 
     private void addDelayVerbKnobs(JPanel panel) {
@@ -302,7 +360,7 @@ public class GUIFrontendStuff extends JFrame {
         attackKnob.setRadius(25);
         attackKnob.addKnobListener(value -> Voice.setAttackTime(value));
         attackKnob.addKnobGraphListener(value -> setAttackValueOnGraph(value));
-        attackKnob.setBounds(20, 220, 80, 80);
+        attackKnob.setBounds(20, 220, 150, 150);
         panel.add(attackKnob);
 
         JLabel attackLabel = new JLabel("Attack");

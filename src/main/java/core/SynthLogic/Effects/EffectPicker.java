@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EffectPicker implements EffectRack {
-    public enum EffectEnums {NONE, DESTRUCTION, NOISE, DELAYVERB}
+    public enum EffectEnums {NONE, DESTRUCTION, NOISE, DELAYVERB, FILTER}
 
     private EffectRack currentEffect = new NullEffect();
     private final Map<EffectEnums, EffectRack> effectMap = new HashMap<>();
@@ -14,6 +14,7 @@ public class EffectPicker implements EffectRack {
         effectMap.put(EffectEnums.NOISE, new NoiseEffect());
         effectMap.put(EffectEnums.NONE, new NullEffect());
         effectMap.put(EffectEnums.DELAYVERB, new DelayVerb(0.5f, 0.5f, 0.3f,false));
+        effectMap.put(EffectEnums.FILTER, new FilterEffect(1f, 0.5f));
     }
 
     public void setEffect(EffectEnums effectEnum) {

@@ -15,9 +15,11 @@ public class Voice {
     private static double decayTime = 0.1;
     private static double sustainLevel = 1.0;
     private static double releaseTime = 0.1;
+    private float velocity;
 
-    public Voice(Note note, WaveformStrategy waveformStrategy) {
+    public Voice(Note note, float velocity, WaveformStrategy waveformStrategy) {
         this.note = note;
+        this.velocity = velocity;
 
         this.waveformStrategy = waveformStrategy;
     }
@@ -44,7 +46,10 @@ public class Voice {
         double step = 2 * Math.PI * note.getFrequency() / ConstantValues.SAMPLE_RATE;
 
         for (int i = 0; i < buffer.length; i++) {
-            buffer[i] = (float) waveformStrategy.generateSample(phase, volume);
+            if(velocity<20){
+                velocity = 20f;
+            }
+            buffer[i] = (float) waveformStrategy.generateSample(phase, volume)*(velocity/100f);
             phase += step;
             if (phase > 2 * Math.PI) phase -= 2 * Math.PI;
         }

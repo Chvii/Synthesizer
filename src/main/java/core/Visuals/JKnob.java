@@ -68,6 +68,11 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
      */
     @Override
     public void paint(Graphics g) {
+
+        // Make a border [OMITTED CAUSE IT LOOKS BAD]
+        // g.setColor(Color.BLACK);
+        // g.fillOval((int)Math.sin(radius) - radius / 12,(int)Math.cos(radius) - radius / 12,2 * radius + radius / 6,2 * radius + radius / 6);
+
         // Draw the knob
         g.setColor(knobColor);
         g.fillOval(0, 0, 2 * radius, 2 * radius);
@@ -83,7 +88,7 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
      */
     @Override
     public Dimension getPreferredSize() {
-        return new Dimension(2 * radius, 2 * radius);
+        return new Dimension(2*radius, 2 * radius);
     }
 
     /**
@@ -126,9 +131,9 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
             int deltaY = lastY - currentY;
 
             if (deltaY > 0) {
-                theta += 0.05;
+                theta += 0.05 * Math.abs(deltaY) / 4; // multiplying by deltaY to make it react to movement speed
             } else if (deltaY < 0) {
-                theta -= 0.05;
+                theta -= 0.05 * Math.abs(deltaY) / 4;
             }
 
             theta = clampAngle(theta);
