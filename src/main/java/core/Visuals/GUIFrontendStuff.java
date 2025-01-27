@@ -5,6 +5,7 @@ import core.SynthLogic.Effects.EffectController;
 import core.SynthLogic.Effects.EffectPicker;
 import core.SynthLogic.Effects.FilterEffect;
 import core.SynthLogic.Mixer;
+import core.SynthLogic.StandardVoice;
 import core.SynthLogic.Tone;
 import core.SynthLogic.Voice;
 import core.WaveformStrategy.WaveformStrategyPicker;
@@ -127,16 +128,16 @@ public class GUIFrontendStuff extends JFrame {
 
         JButton octaveUpButton = new JButton("^");
         octaveUpButton.addActionListener(e -> {
-            Voice.increaseOctave();
-            octaveStateLabel.setText(Voice.getOctaveString());
+            StandardVoice.increaseOctave();
+            octaveStateLabel.setText(StandardVoice.getOctaveString());
         });
         panel.add(octaveUpButton);
 
 
         JButton octaveDownButton = new JButton("v");
         octaveDownButton.addActionListener(e -> {
-            Voice.decreaseOctave();
-            octaveStateLabel.setText(Voice.getOctaveString());
+            StandardVoice.decreaseOctave();
+            octaveStateLabel.setText(StandardVoice.getOctaveString());
         });
         panel.add(octaveDownButton);
 
@@ -146,7 +147,7 @@ public class GUIFrontendStuff extends JFrame {
         octaveLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
         panel.add(octaveLabel);
 
-        octaveStateLabel = new JLabel(String.valueOf(Voice.getOctave()));
+        octaveStateLabel = new JLabel(String.valueOf(tone.getOctave()));
         octaveStateLabel.setForeground(Color.WHITE);
         octaveStateLabel.setFont(new Font("SansSerif", Font.ITALIC, 14));
         panel.add(octaveStateLabel);
@@ -192,7 +193,7 @@ public class GUIFrontendStuff extends JFrame {
         cutoffKnob.setDefaultPosition(false,false,true);
         cutoffKnob.addKnobListener(value ->{
             FilterEffect filterEffect = (FilterEffect) effectController.getCurrentEffect();
-            filterEffect.setCutoff((double) value);
+            filterEffect.setCutoff((float) value);
         });
         panel.add(cutoffKnob);
 
@@ -225,7 +226,7 @@ public class GUIFrontendStuff extends JFrame {
         resonanceKnob.setRadius(30);
         resonanceKnob.addKnobListener(value -> {
             FilterEffect filterEffect = (FilterEffect) effectController.getCurrentEffect();
-            filterEffect.setResonance((double) value);
+            filterEffect.setResonance((float) value);
         });
         resonanceKnob.setBounds(220,200,100,100);
         panel.add(resonanceKnob);
@@ -243,7 +244,7 @@ public class GUIFrontendStuff extends JFrame {
         delayKnob.setRange(0.001, 2.0); // Fast to slow delay
         delayKnob.addKnobListener(value -> {
             DelayVerb delayVerb = (DelayVerb) effectController.getCurrentEffect();
-            delayVerb.setDelayTimeInSeconds((double) value);
+            delayVerb.setDelayTimeInSeconds((float) value);
         });
         delayKnob.setBounds(50, 70, 100, 100);
         panel.add(delayKnob);
@@ -258,7 +259,7 @@ public class GUIFrontendStuff extends JFrame {
         feedbackKnob.setRange(0.0, 1.0);
         feedbackKnob.addKnobListener(value -> {
             DelayVerb delayVerb = (DelayVerb) effectController.getCurrentEffect();
-            delayVerb.setFeedback((double) value);
+            delayVerb.setFeedback((float) value);
         });
         feedbackKnob.setBounds(200, 70, 100, 100);
         panel.add(feedbackKnob);
@@ -273,7 +274,7 @@ public class GUIFrontendStuff extends JFrame {
         mixKnob.setRange(0.0, 1.0);
         mixKnob.addKnobListener(value -> {
             DelayVerb delayVerb = (DelayVerb) effectController.getCurrentEffect();
-            delayVerb.setMix((double) value);
+            delayVerb.setMix((float) value);
         });
         mixKnob.setBounds(350, 70, 100, 100);
         panel.add(mixKnob);
@@ -358,7 +359,7 @@ public class GUIFrontendStuff extends JFrame {
         JKnob attackKnob = new JKnob(new Color(70, 70, 70), Color.BLACK);
         attackKnob.setRange(1, 5000);
         attackKnob.setRadius(25);
-        attackKnob.addKnobListener(value -> Voice.setAttackTime(value));
+        attackKnob.addKnobListener(value -> StandardVoice.setAttackTime(value));
         attackKnob.addKnobGraphListener(value -> setAttackValueOnGraph(value));
         attackKnob.setBounds(20, 220, 150, 150);
         panel.add(attackKnob);
@@ -372,7 +373,7 @@ public class GUIFrontendStuff extends JFrame {
         JKnob decayKnob = new JKnob(new Color(70, 70, 70), Color.BLACK);
         decayKnob.setRange(1, 5000);
         decayKnob.setRadius(25);
-        decayKnob.addKnobListener(value -> Voice.setDecayTime(value));
+        decayKnob.addKnobListener(value -> StandardVoice.setDecayTime(value));
         decayKnob.addKnobGraphListener(value -> setDecayValueOnGraph(value));
         decayKnob.setBounds(120, 220, 80, 80);
         panel.add(decayKnob);
@@ -387,7 +388,7 @@ public class GUIFrontendStuff extends JFrame {
         sustainKnob.setRange(0.0, 1.0);
         sustainKnob.setDefaultPosition(false,false,true);
         sustainKnob.setRadius(25);
-        sustainKnob.addKnobListener(value -> Voice.setSustainLevel(value));
+        sustainKnob.addKnobListener(value -> StandardVoice.setSustainLevel(value));
         sustainKnob.addKnobGraphListener(value -> setSustainValueOnGraph(value));
         sustainKnob.setBounds(220, 220, 80, 80);
         panel.add(sustainKnob);
@@ -401,7 +402,7 @@ public class GUIFrontendStuff extends JFrame {
         JKnob releaseKnob = new JKnob(new Color(70, 70, 70), Color.BLACK);
         releaseKnob.setRange(1, 5000);
         releaseKnob.setRadius(25);
-        releaseKnob.addKnobListener(value -> Voice.setReleaseTime(value));
+        releaseKnob.addKnobListener(value -> StandardVoice.setReleaseTime(value));
         releaseKnob.addKnobGraphListener(value -> setReleaseValueOnGraph(value));
         releaseKnob.setBounds(320, 220, 80, 80);
         panel.add(releaseKnob);

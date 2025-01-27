@@ -48,7 +48,6 @@ public class FilterEffect implements EffectRack {
         for (BiquadFilterStage stage : stages) {
             stage.updateCoefficients(cutoffFrequency, resonance);
         }
-        System.out.println(cutoffFrequency);
     }
 
     private double calculateCutoff(double knobPosition) {

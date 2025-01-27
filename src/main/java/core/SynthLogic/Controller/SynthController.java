@@ -1,8 +1,8 @@
 package core.SynthLogic.Controller;
 
 import core.SynthLogic.Note;
+import core.SynthLogic.StandardNote;
 import core.SynthLogic.Tone;
-import core.Visuals.GUIFrontendStuff;
 
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
@@ -11,7 +11,6 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class SynthController implements Receiver {
     private Tone tone;
@@ -31,35 +30,35 @@ public class SynthController implements Receiver {
 
     private void setupKeyBindings() {
         // Map notes to keys
-        keyNoteMap.put('q', new Note(Note.C4.getFrequency()));
-        keyNoteMap.put('2', new Note(Note.Csharp4.getFrequency()));
-        keyNoteMap.put('w', new Note(Note.D4.getFrequency()));
-        keyNoteMap.put('3', new Note(Note.Dsharp4.getFrequency()));
-        keyNoteMap.put('e', new Note(Note.E4.getFrequency()));
-        keyNoteMap.put('r', new Note(Note.F4.getFrequency()));
-        keyNoteMap.put('5', new Note(Note.Fsharp4.getFrequency()));
-        keyNoteMap.put('t', new Note(Note.G4.getFrequency()));
-        keyNoteMap.put('6', new Note(Note.Gsharp4.getFrequency()));
-        keyNoteMap.put('y', new Note(Note.A4.getFrequency()));
-        keyNoteMap.put('7', new Note(Note.Asharp4.getFrequency()));
-        keyNoteMap.put('u', new Note(Note.B4.getFrequency()));
-        keyNoteMap.put('i', new Note(Note.C4.getFrequency() * 2));
-        keyNoteMap.put('9', new Note(Note.Csharp4.getFrequency()*2));
-        keyNoteMap.put('o', new Note(Note.D4.getFrequency()*2));
-        keyNoteMap.put('0', new Note(Note.Dsharp4.getFrequency()*2));
-        keyNoteMap.put('p', new Note(Note.E4.getFrequency()*2));
-        keyNoteMap.put('z', new Note(Note.C4.getFrequency()/2));
-        keyNoteMap.put('s', new Note(Note.Csharp4.getFrequency()/2));
-        keyNoteMap.put('x', new Note(Note.D4.getFrequency()/2));
-        keyNoteMap.put('d', new Note(Note.Dsharp4.getFrequency()/2));
-        keyNoteMap.put('c', new Note(Note.E4.getFrequency()/2));
-        keyNoteMap.put('v', new Note(Note.F4.getFrequency()/2));
-        keyNoteMap.put('g', new Note(Note.Fsharp4.getFrequency()/2));
-        keyNoteMap.put('b', new Note(Note.G4.getFrequency()/2));
-        keyNoteMap.put('h', new Note(Note.Gsharp4.getFrequency()/2));
-        keyNoteMap.put('n', new Note(Note.A4.getFrequency()/2));
-        keyNoteMap.put('j', new Note(Note.Asharp4.getFrequency()/2));
-        keyNoteMap.put('m', new Note(Note.B4.getFrequency()/2));
+        keyNoteMap.put('q', new StandardNote(StandardNote.C4.getFrequency()));
+        keyNoteMap.put('2', new StandardNote(StandardNote.Csharp4.getFrequency()));
+        keyNoteMap.put('w', new StandardNote(StandardNote.D4.getFrequency()));
+        keyNoteMap.put('3', new StandardNote(StandardNote.Dsharp4.getFrequency()));
+        keyNoteMap.put('e', new StandardNote(StandardNote.E4.getFrequency()));
+        keyNoteMap.put('r', new StandardNote(StandardNote.F4.getFrequency()));
+        keyNoteMap.put('5', new StandardNote(StandardNote.Fsharp4.getFrequency()));
+        keyNoteMap.put('t', new StandardNote(StandardNote.G4.getFrequency()));
+        keyNoteMap.put('6', new StandardNote(StandardNote.Gsharp4.getFrequency()));
+        keyNoteMap.put('y', new StandardNote(StandardNote.A4.getFrequency()));
+        keyNoteMap.put('7', new StandardNote(StandardNote.Asharp4.getFrequency()));
+        keyNoteMap.put('u', new StandardNote(StandardNote.B4.getFrequency()));
+        keyNoteMap.put('i', new StandardNote(StandardNote.C4.getFrequency() * 2));
+        keyNoteMap.put('9', new StandardNote(StandardNote.Csharp4.getFrequency()*2));
+        keyNoteMap.put('o', new StandardNote(StandardNote.D4.getFrequency()*2));
+        keyNoteMap.put('0', new StandardNote(StandardNote.Dsharp4.getFrequency()*2));
+        keyNoteMap.put('p', new StandardNote(StandardNote.E4.getFrequency()*2));
+        keyNoteMap.put('z', new StandardNote(StandardNote.C4.getFrequency()/2));
+        keyNoteMap.put('s', new StandardNote(StandardNote.Csharp4.getFrequency()/2));
+        keyNoteMap.put('x', new StandardNote(StandardNote.D4.getFrequency()/2));
+        keyNoteMap.put('d', new StandardNote(StandardNote.Dsharp4.getFrequency()/2));
+        keyNoteMap.put('c', new StandardNote(StandardNote.E4.getFrequency()/2));
+        keyNoteMap.put('v', new StandardNote(StandardNote.F4.getFrequency()/2));
+        keyNoteMap.put('g', new StandardNote(StandardNote.Fsharp4.getFrequency()/2));
+        keyNoteMap.put('b', new StandardNote(StandardNote.G4.getFrequency()/2));
+        keyNoteMap.put('h', new StandardNote(StandardNote.Gsharp4.getFrequency()/2));
+        keyNoteMap.put('n', new StandardNote(StandardNote.A4.getFrequency()/2));
+        keyNoteMap.put('j', new StandardNote(StandardNote.Asharp4.getFrequency()/2));
+        keyNoteMap.put('m', new StandardNote(StandardNote.B4.getFrequency()/2));
     }
 
     /**
@@ -71,7 +70,7 @@ public class SynthController implements Receiver {
         double frequencyCalculator = 0;
         for(int n = 0; n < 127 ; n++){
             frequencyCalculator = 440*Math.pow(2,((double)n-69)/12);
-            midiNoteMap.put(n, new Note(frequencyCalculator));
+            midiNoteMap.put(n, new StandardNote(frequencyCalculator));
         }
     }
 

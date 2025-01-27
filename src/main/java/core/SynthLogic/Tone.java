@@ -1,44 +1,21 @@
 package core.SynthLogic;
 
-import core.SynthLogic.Effects.EffectRack;
-import core.WaveformStrategy.*;
+import core.WaveformStrategy.WaveformStrategy;
 
-import javax.sound.sampled.SourceDataLine;
+public interface Tone {
+    Mixer getMixer();
 
-public class Tone {
-    private Mixer mixer;
-    private double octave = 1;
-    private WaveformStrategy waveformStrategy;
-    private WaveformStrategyPicker waveformStrategyPicker;
-    private EffectRack effectRack;
+    void play(Note note, double velocity);
 
-    public Tone(SourceDataLine line, WaveformStrategyPicker waveformStrategyPicker, Mixer mixer) {
-        this.mixer = mixer;
-        this.waveformStrategyPicker = waveformStrategyPicker;
-        mixer.start();
-    }
+    void setWaveformStrategy(WaveformStrategy waveformStrategy);
 
-    public Mixer getMixer() {
-        return mixer;
-    }
+    void stop(Note note);
 
-    public void play(Note note, double velocity) { // TODO: Include midiKey as a parameter, or figure out how to implement octave switch with midi controller
-        if (mixer.getActiveVoices().stream().anyMatch(v -> v.getNote() == note)){
-            mixer.overrideVoice(note);
-        }
+    void increaseOctave();
 
-        this.waveformStrategy = waveformStrategyPicker.chooseWaveformStrategy();
-        mixer.addVoice(new Voice(note, velocity, waveformStrategy));
-    }
-    public void setWaveformStrategy(WaveformStrategy waveformStrategy){
-        this.waveformStrategy = waveformStrategy;
-    }
+    String getOctaveString();
 
+    void decreaseOctave();
 
-
-    public void stop(Note note) { // TODO: Include midiKey as a parameter, or figure out how to implement octave switch with midi controller
-        mixer.removeVoice(note);
-    }
-
-
+    double getOctave();
 }

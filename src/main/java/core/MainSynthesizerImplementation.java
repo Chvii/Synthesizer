@@ -5,6 +5,8 @@ import core.SynthLogic.Controller.SynthController;
 import core.SynthLogic.Effects.EffectController;
 import core.SynthLogic.Effects.EffectPicker;
 import core.SynthLogic.Mixer;
+import core.SynthLogic.StandardMixer;
+import core.SynthLogic.StandardTone;
 import core.SynthLogic.Tone;
 import core.Visuals.GUIFrontendStuff;
 import core.WaveformStrategy.WaveformStrategyPicker;
@@ -26,8 +28,8 @@ public class MainSynthesizerImplementation {
         WaveformStrategyPicker waveformStrategyPicker = new WaveformStrategyPicker();
         EffectPicker effectPicker = new EffectPicker();
         EffectController effectController = new EffectController(effectPicker);
-        Mixer mixer = new Mixer(line, effectPicker); // Mixer uses the EffectPicker
-        Tone tone = new Tone(line, waveformStrategyPicker,mixer);
+        Mixer mixer = new StandardMixer(line, effectPicker); // Mixer uses the EffectPicker
+        Tone tone = new StandardTone(line, waveformStrategyPicker, mixer);
         GUIFrontendStuff gui = new GUIFrontendStuff(mixer, waveformStrategyPicker, tone, effectController);
         Receiver receiver = null;
         SynthController synthController = new SynthController(receiver, tone);
