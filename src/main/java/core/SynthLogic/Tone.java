@@ -3,19 +3,12 @@ package core.SynthLogic;
 import core.WaveformStrategy.WaveformStrategy;
 
 public interface Tone {
-    Mixer getMixer();
-
+    Oscillator[] getOscillators();
+    Oscillator getOscillator(int i);
     void play(Note note, double velocity);
-
-    void setWaveformStrategy(WaveformStrategy waveformStrategy);
-
     void stop(Note note);
-
-    void increaseOctave();
-
-    String getOctaveString();
-
-    void decreaseOctave();
-
-    double getOctave();
+    void nextWaveform(int i);
+    void previousWaveform(int i);
+    void updateOscillatorWaveforms(int i);
+    String getWaveformName(int oscillatorIndex);
 }

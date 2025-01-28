@@ -1,40 +1,52 @@
 package core.Visuals;
 
+import core.SynthLogic.*;
+import core.SynthLogic.Controller.KeyboardToSynth;
+import core.SynthLogic.Controller.SynthController;
 import core.SynthLogic.Effects.DelayVerb;
 import core.SynthLogic.Effects.EffectController;
 import core.SynthLogic.Effects.EffectPicker;
 import core.SynthLogic.Effects.FilterEffect;
-import core.SynthLogic.Mixer;
-import core.SynthLogic.StandardVoice;
-import core.SynthLogic.Tone;
-import core.SynthLogic.Voice;
 import core.WaveformStrategy.WaveformStrategyPicker;
 
+import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Receiver;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.SourceDataLine;
 import javax.swing.*;
-import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.logging.Filter;
+
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
 public class GUIFrontendStuff extends JFrame {
-    private WaveformStrategyPicker waveformStrategyPicker;
-    private JLabel strategyLabel;
-    private JLabel octaveStateLabel;
+    private WaveformStrategyPicker[] waveformPickers;
     private Tone tone;
     private EffectController effectController;
-    private double attackValueOnGraph;
-    private double decayValueOnGraph;
-    private double sustainValueOnGraph = 1;
-    private double releaseValueOnGraph;
-    public GUIFrontendStuff(Mixer mixer, WaveformStrategyPicker waveformStrategyPicker, Tone tone, EffectController effectController) {
-        this.waveformStrategyPicker = waveformStrategyPicker;
+    private JLabel[] oscillatorLabels = new JLabel[3];
+    private JLabel octaveStateLabel;
+    private double attackValue = 0.1;
+    private double decayValue = 0.1;
+    private double sustainValue = 1.0;
+    private double releaseValue = 0.1;
+    private JLabel[] octaveStateLabels = new JLabel[3];
+
+    public GUIFrontendStuff(Mixer mixer, WaveformStrategyPicker[] waveformPickers, Tone tone, EffectController effectController) {
+        this.waveformPickers = waveformPickers;
         this.tone = tone;
         this.effectController = effectController;
+
         // Frame Setup
-        setTitle("core.SynthLogic.Flagzisizer VST");
-        setSize(1000, 800);
+        setTitle("Flagzisizer VST");
+        setSize(1500, 1200);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(null); // Absolute layout for custom positioning
+        setLayout(null);
         setResizable(false);
 
         // Background Panel
@@ -44,116 +56,306 @@ public class GUIFrontendStuff extends JFrame {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g;
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                // Gradient background
                 GradientPaint gradient = new GradientPaint(0, 0, new Color(45, 45, 48), getWidth(), getHeight(), new Color(25, 25, 28));
                 g2d.setPaint(gradient);
                 g2d.fillRect(0, 0, getWidth(), getHeight());
             }
         };
-        backgroundPanel.setBounds(0, 0, 1000, 800);
+        backgroundPanel.setBounds(0, 0, 1500, 1200);
         add(backgroundPanel);
 
-        // Waveform Display
-        JPanel waveformPanelWithControls = createWaveformPanelWithControls(mixer);
-        waveformPanelWithControls.setBounds(20, 20, 240, 150);
-        backgroundPanel.add(waveformPanelWithControls);
+        // Oscillators Panel
+        JPanel oscillatorsPanel = createOscillatorsPanel(mixer);
+        oscillatorsPanel.setBounds(20, 20, 910, 300);
+        backgroundPanel.add(oscillatorsPanel);
 
         // ADSR Panel
         JPanel adsrPanel = createADSRPanel();
         adsrPanel.setBounds(20, 300, 400, 350);
         backgroundPanel.add(adsrPanel);
 
-        // Octave buttons and text
-        JPanel octaveChangerPanel = createOctaveButtons();
-        octaveChangerPanel.setBounds(400,20,200,100);
-        backgroundPanel.add(octaveChangerPanel);
-
-        // Footer Panel
-        JPanel footerPanel = createFooterPanel();
-        footerPanel.setBounds(0, 750, 1000, 50);
-        backgroundPanel.add(footerPanel);
-
-        // Effect panel
+        // Effect Panel
         JPanel effectPanel = createEffectPanel(effectController);
-        effectPanel.setBounds(450,300,500,300);
+        effectPanel.setBounds(500, 300, 460, 350);
         backgroundPanel.add(effectPanel);
 
         setVisible(true);
     }
 
-    private JPanel createWaveformPanelWithControls(Mixer mixer) {
+    private JPanel createOscillatorsPanel(Mixer mixer) {
         JPanel panel = new JPanel(null);
         panel.setBackground(new Color(30, 30, 30));
+        panel.setBorder(BorderFactory.createTitledBorder("Oscillators"));
 
-        // Waveform Display
-        WaveformPanel waveformPanel = new WaveformPanel();
-        mixer.addWaveformUpdateListener(waveformPanel);
-        waveformPanel.setBounds(20, 10, 200, 100);
-        panel.add(waveformPanel);
-
-        // Waveform Strategy Controls
-        JButton prevButton = new JButton("<");
-        prevButton.setBounds(20, 110, 50, 30);
-        prevButton.addActionListener(e -> {
-            waveformStrategyPicker.previousWaveform();
-            strategyLabel.setText(waveformStrategyPicker.StringifyWaveformSelector());
-        });
-        prevButton.setForeground(Color.BLACK);
-        panel.add(prevButton);
-
-        strategyLabel = new JLabel(waveformStrategyPicker.StringifyWaveformSelector(), SwingConstants.CENTER); // Placeholder text
-        repaint();
-        strategyLabel.setBounds(80, 110, 80, 30);
-        strategyLabel.setForeground(Color.WHITE);
-        strategyLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
-        panel.add(strategyLabel);
-
-        JButton nextButton = new JButton(">");
-        nextButton.setBounds(170, 110, 50, 30);
-        nextButton.addActionListener(e -> {
-            waveformStrategyPicker.nextWaveform();
-            strategyLabel.setText(waveformStrategyPicker.StringifyWaveformSelector());
-        });
-        nextButton.setForeground(Color.BLACK);
-        panel.add(nextButton);
-
+        for (int i = 0; i < 3; i++) {
+            JPanel oscPanel = createSingleOscillatorPanel(mixer, i);
+            oscPanel.setBounds(10 + (300 * i), 20, 290, 260);
+            panel.add(oscPanel);
+        }
         return panel;
     }
-    private JPanel createOctaveButtons() {
-        JPanel panel = new JPanel();
-        panel.setBackground(new Color(30, 30, 30));
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));  // Set vertical layout for buttons
 
+    private JPanel createSingleOscillatorPanel(Mixer mixer, int i) {
+        Oscillator oscillator = tone.getOscillator(i);
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(new Color(45, 45, 48));
+        panel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(100, 100, 100), 1),
+                "OSC " + (i + 1),
+                TitledBorder.LEFT,
+                TitledBorder.TOP,
+                new Font("Segoe UI", Font.BOLD, 12),
+                new Color(180, 200, 200)
+        ));
 
-        JButton octaveUpButton = new JButton("^");
-        octaveUpButton.addActionListener(e -> {
-            StandardVoice.increaseOctave();
-            octaveStateLabel.setText(StandardVoice.getOctaveString());
-        });
-        panel.add(octaveUpButton);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.BOTH;
 
+        // Column weights for 6-column grid (0-5)
+        int[] columnWeights = {0, 1, 1, 1, 1, 0}; // Middle 4 columns expand
+        for(int col=0; col<6; col++) {
+            gbc.gridx = col;
+            gbc.weightx = columnWeights[col];
+            panel.add(Box.createHorizontalGlue(), gbc);
+        }
+        gbc.weightx = 0; // Reset for actual components
 
-        JButton octaveDownButton = new JButton("v");
-        octaveDownButton.addActionListener(e -> {
-            StandardVoice.decreaseOctave();
-            octaveStateLabel.setText(StandardVoice.getOctaveString());
-        });
-        panel.add(octaveDownButton);
+        // --- Waveform Display (columns 1-4) ---
+        WaveformDisplayPanel waveformDisplay = new WaveformDisplayPanel(oscillator);
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.gridwidth = 4; // Spans 4 middle columns
+        gbc.weighty = 0.7; // 70% of vertical space
+        panel.add(waveformDisplay, gbc);
 
+        // --- Octave Controls (column 5) ---
+        JPanel octavePanel = new JPanel(new GridLayout(3, 1, 0, 5));
+        octavePanel.setBackground(new Color(45, 45, 48));
+        octavePanel.setPreferredSize(new Dimension(60, 120));
 
-        JLabel octaveLabel = new JLabel("Change Octave");
+        JButton octUp = createIconButton("↑", new Color(100, 200, 150));
+        JLabel octaveLabel = new JLabel(String.valueOf(oscillator.getOctaveShift()), SwingConstants.CENTER);
         octaveLabel.setForeground(Color.WHITE);
-        octaveLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
-        panel.add(octaveLabel);
+        JButton octDown = createIconButton("↓", new Color(200, 100, 100));
 
-        octaveStateLabel = new JLabel(String.valueOf(tone.getOctave()));
-        octaveStateLabel.setForeground(Color.WHITE);
-        octaveStateLabel.setFont(new Font("SansSerif", Font.ITALIC, 14));
-        panel.add(octaveStateLabel);
+        octavePanel.add(octUp);
+        octavePanel.add(octaveLabel);
+        octavePanel.add(octDown);
+
+        octUp.addActionListener(e -> updateOctave(i, oscillator, octaveLabel, 2));
+        octDown.addActionListener(e -> updateOctave(i, oscillator, octaveLabel, 0.5));
+
+        gbc.gridx = 5; // 6th column (0-based index 5)
+        gbc.gridwidth = 1;
+        gbc.weighty = 0;
+        gbc.anchor = GridBagConstraints.NORTHEAST;
+        panel.add(octavePanel, gbc);
+
+        // --- Waveform Selector (below waveform) ---
+        JPanel controlPanel = new JPanel(new BorderLayout(5, 0));
+        controlPanel.setBackground(new Color(45, 45, 48));
+
+        JButton prevButton = createIconButton("<", new Color(80, 160, 200));
+        JLabel waveformLabel = new JLabel(oscillator.getWaveformStrategy().Stringify(), SwingConstants.CENTER);
+        waveformLabel.setForeground(Color.WHITE);
+        JButton nextButton = createIconButton(">", new Color(80, 160, 200));
+
+        prevButton.addActionListener(e -> updateWaveform(-1, i, waveformLabel, waveformDisplay));
+        nextButton.addActionListener(e -> updateWaveform(1, i, waveformLabel, waveformDisplay));
+
+        controlPanel.add(prevButton, BorderLayout.WEST);
+        controlPanel.add(waveformLabel, BorderLayout.CENTER);
+        controlPanel.add(nextButton, BorderLayout.EAST);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.gridwidth = 4;
+        gbc.weighty = 0.1; // 10% of vertical space
+        gbc.anchor = GridBagConstraints.CENTER;
+        panel.add(controlPanel, gbc);
+
+        // --- Knobs (bottom row) ---
+        JPanel knobPanel = new JPanel(new GridLayout(1, 2, 20, 0));
+        knobPanel.setBackground(new Color(45, 45, 48));
+
+        JKnob detuneKnob = createStyledKnob("Detune", -50, 50, 0, new Color(200, 120, 80));
+        detuneKnob.setRadius(10);
+        detuneKnob.addKnobListener(oscillator::setDetune);
+        knobPanel.add(createKnobPanel(detuneKnob, "DETUNE"));
+
+        JKnob gainKnob = createStyledKnob("Gain", 0.0, 1.0, 1.0, new Color(80, 160, 200));
+        gainKnob.setRadius(10);
+        gainKnob.addKnobListener(oscillator::setGain);
+        knobPanel.add(createKnobPanel(gainKnob, "GAIN"));
+
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.gridwidth = 4;
+        gbc.weighty = 0.2; // 20% of vertical space
+        //gbc.anchor = GridBagConstraints.SOUTH;
+        panel.add(knobPanel, gbc);
 
         return panel;
     }
+
+    private void updateWaveform(int direction, int oscIndex, JLabel label, WaveformDisplayPanel display) {
+        if(direction > 0) {
+            tone.nextWaveform(oscIndex);
+        } else {
+            tone.previousWaveform(oscIndex);
+        }
+        tone.updateOscillatorWaveforms(oscIndex);
+        label.setText(tone.getWaveformName(oscIndex));
+        display.repaint();
+    }
+    private void updateOctave(int index, Oscillator oscillator, JLabel octaveLabel, double multiplier) {
+        double newOctave = oscillator.getOctaveShift() * multiplier;
+        oscillator.setOctaveShift(newOctave);
+        octaveLabel.setText(String.format("%.1fx", newOctave));
+    }
+
+    private JButton createIconButton(String text, Color color) {
+        JButton button = new JButton(text);
+        button.setBackground(new Color(60, 60, 60));
+        button.setForeground(color);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(100, 100, 100), 1),
+                BorderFactory.createEmptyBorder(2, 6, 2, 6)
+        ));
+        button.setPreferredSize(new Dimension(40, 25));
+        button.setMargin(new Insets(2, 5, 2, 5));
+        return button;
+    }
+
+    private JKnob createStyledKnob(String label, double min, double max, double init, Color color) {
+        JKnob knob = new JKnob(new Color(60, 60, 60), color);
+        knob.setRange(min, max);
+        knob.setValue(init);
+        knob.setRadius(20);
+        // Removed label styling calls
+        return knob;
+    }
+
+    private void updateOctaveLabel(int index, Oscillator oscillator) {
+        octaveStateLabel.setText("Octave: " + oscillator.getOctaveShift());
+    }
+
+    private double getAttackValueOnGraph() {
+        return attackValue * 1000; // Convert seconds to milliseconds for visual scale
+    }
+    private void setAttackValueOnGraph(double attackValu){
+        this.attackValue = attackValue;
+    }
+
+    private double getDecayValueOnGraph() {
+        return decayValue * 1000;
+    }
+    private void setDecayValueOnGraph(double decayValue){
+        this.decayValue = decayValue;
+    }
+
+    private double getSustainValueOnGraph() {
+        return (1 - sustainValue) * 100; // Convert 0-1 range to pixel height
+    }
+
+    private void setSustainValueOnGraph(double sustainValue) {
+        this.sustainValue = sustainValue;  // Was incorrectly assigning to itself
+    }
+
+    private double getReleaseValueOnGraph() {
+        return releaseValue * 1000;
+    }
+    private void setReleaseValueOnGraph(double releaseValue){
+        this.releaseValue = releaseValue;
+    }
+
+    private JPanel createADSRPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(45, 45, 48));
+        panel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(100, 100, 100), 1),
+                "ENVELOPE",
+                TitledBorder.LEFT,
+                TitledBorder.TOP,
+                new Font("Segoe UI", Font.BOLD, 12),
+                new Color(200, 200, 200)
+        ));
+
+        // ADSR GRAPH
+        JPanel graphPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setColor(Color.WHITE);
+                g2.drawString(String.format("A: %.2fs", attackValue), 10, 20);
+                g2.drawString(String.format("D: %.2fs", decayValue), 100, 20);
+                g2.drawString(String.format("S: %.2f", sustainValue), 190, 20);
+                g2.drawString(String.format("R: %.2fs", releaseValue), 280, 20);
+                g2.setBackground(new Color(30, 30, 30));
+                g2.setColor(new Color(100, 200, 255));
+                g2.setStroke(new BasicStroke(2));
+
+                int[] xPoints = {
+                        0, /* initial pos*/
+                        (int) (getAttackValueOnGraph()/250), /* attack time */
+                        (int) (getAttackValueOnGraph()/250) + (int) (getDecayValueOnGraph()/250), /* decay time */
+                        280, /* release time */
+                        280 + (int) (getReleaseValueOnGraph()/250)};
+                int[] yPoints = {
+                        200, /* 0 volume at start */
+                        0, /* max volume after attack time */
+                        (int) getSustainValueOnGraph(), /* sustain level */
+                        (int) getSustainValueOnGraph(), /* sustain level, release start */
+                        200}; /* 0 volume after release */
+                g2.drawPolyline( xPoints, yPoints, xPoints.length);
+                repaint();
+            }
+        };
+        panel.add(graphPanel, BorderLayout.CENTER);
+
+        // Knobs panel
+        JPanel knobPanel = new JPanel(new GridLayout(1, 4, 10, 0));
+        knobPanel.setBackground(new Color(45, 45, 48));
+
+        String[] labels = {"ATTACK", "DECAY", "SUSTAIN", "RELEASE"};
+        Color[] colors = {new Color(200, 120, 80), new Color(120, 200, 80),
+                new Color(80, 160, 200), new Color(180, 100, 200)};
+
+        for (int i = 0; i < 4; i++) {
+            JKnob knob = createStyledKnob(labels[i], 0.01, 5.0, 0.1, colors[i]);
+            final int paramIndex = i; // Effectively final within the loop iteration
+            knob.addKnobListener(value -> {
+                switch (paramIndex) { // Use paramIndex here
+                    case 0 -> {
+                        StandardVoice.setAttackTime(value);
+                        setAttackValueOnGraph(value);
+                    }
+                    case 1 -> {
+                        StandardVoice.setDecayTime(value);
+                        setDecayValueOnGraph(value);
+                    }
+                    case 2 -> {
+                        StandardVoice.setSustainLevel(value);
+                        setSustainValueOnGraph(value);
+                    }
+                    case 3 -> {
+                        StandardVoice.setReleaseTime(value);
+                        setReleaseValueOnGraph(value);
+                    }
+                }
+                graphPanel.repaint();
+            });
+            // Moved outside the listener to the correct position in the loop
+            knobPanel.add(createKnobPanel(knob, labels[i]));
+        }
+        panel.add(knobPanel, BorderLayout.SOUTH);
+        panel.setBackground(new Color(30, 30, 30));
+        return panel;
+    }
+
 
     private JPanel createEffectPanel(EffectController effectController) {
         JPanel panel = new JPanel();
@@ -226,7 +428,7 @@ public class GUIFrontendStuff extends JFrame {
         resonanceKnob.setRadius(30);
         resonanceKnob.addKnobListener(value -> {
             FilterEffect filterEffect = (FilterEffect) effectController.getCurrentEffect();
-            filterEffect.setResonance((float) value);
+            filterEffect.setResonance( value);
         });
         resonanceKnob.setBounds(220,200,100,100);
         panel.add(resonanceKnob);
@@ -293,139 +495,77 @@ public class GUIFrontendStuff extends JFrame {
         stereoButton.setBounds(200, 200, 120, 30);
         panel.add(stereoButton);
     }
+    private JPanel createKnobPanel(JKnob knob, String labelText) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(45, 45, 48));
 
-    private void setAttackValueOnGraph(double attackValueOnGraph){
-        this.attackValueOnGraph = attackValueOnGraph;
-    }
-    private double getAttackValueOnGraph(){
-        return attackValueOnGraph;
-    }
-    private void setDecayValueOnGraph(double decayValueOnGraph){
-        this.decayValueOnGraph = decayValueOnGraph;
-    }
-    private double getDecayValueOnGraph(){
-        return decayValueOnGraph;
-    }
-    private void setSustainValueOnGraph(double sustainValueOnGraph){
-        this.sustainValueOnGraph = sustainValueOnGraph;
-    }
-    private double getSustainValueOnGraph(){
-        return (1-sustainValueOnGraph)*200;
-    }
-    private void setReleaseValueOnGraph(double releaseValueOnGraph){
-        this.releaseValueOnGraph = releaseValueOnGraph;
-    }
-    private double getReleaseValueOnGraph(){
-        return releaseValueOnGraph;
+        // Add the knob centered in the panel
+        JPanel knobWrapper = new JPanel(new GridBagLayout());
+        knobWrapper.setBackground(new Color(45, 45, 48));
+        knobWrapper.add(knob);
+        panel.add(knobWrapper, BorderLayout.CENTER);
+
+        // Add the label below the knob
+        JLabel label = new JLabel(labelText, SwingConstants.CENTER);
+        label.setForeground(Color.WHITE);
+        label.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        panel.add(label, BorderLayout.SOUTH);
+
+        return panel;
     }
 
-    private JPanel createADSRPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(null);
-        panel.setBackground(new Color(30, 30, 30));
-        panel.setBorder(BorderFactory.createLineBorder(new Color(150, 150, 150), 2));
+    public static void main(String[] args) throws LineUnavailableException, MidiUnavailableException {
+        AudioFormat af = new AudioFormat(44100, 16, 2, true, true);
+        SourceDataLine line = AudioSystem.getSourceDataLine(af);
+        line.open(af, 2500);
+        line.start();
 
-        // ADSR Graph
-        JPanel graphPanel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g;
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.GREEN);
-                g2.setStroke(new BasicStroke(2));
+        WaveformStrategyPicker[] waveformPickers = new WaveformStrategyPicker[3];
+        for (int i = 0; i < waveformPickers.length; i++) {
+            waveformPickers[i] = new WaveformStrategyPicker();
+        }
 
-                int[] xPoints = {
-                        0, /* initial pos*/
-                        (int) (getAttackValueOnGraph()/50), /* attack time */
-                        (int) (getAttackValueOnGraph()/50) + (int) (getDecayValueOnGraph()/50), /* decay time */
-                        280, /* release time */
-                        280 + (int) (getReleaseValueOnGraph()/50)};
-                int[] yPoints = {
-                        200, /* 0 volume at start */
-                        0, /* max volume after attack time */
-                        (int) getSustainValueOnGraph(), /* sustain level */
-                        (int) getSustainValueOnGraph(), /* sustain level, release start */
-                        200}; /* 0 volume after release */
-                g2.drawPolyline( xPoints, yPoints, xPoints.length);
-                repaint();
+        EffectPicker effectPicker = new EffectPicker();
+        EffectController effectController = new EffectController(effectPicker);
+        Mixer mixer = new StandardMixer(line, effectPicker);
+        Tone tone = new StandardTone(line, waveformPickers, mixer);
+
+        new GUIFrontendStuff(mixer, waveformPickers, tone, effectController);
+
+        Receiver receiver = null; // Replace with an actual receiver if needed
+        SynthController synthController = new SynthController(receiver, tone);
+        new KeyboardToSynth(tone).run();
+    }
+
+
+    private class WaveformDisplayPanel extends JPanel {
+        private final Oscillator oscillator;
+        private final int width = 225;
+        private final int height = 140;
+
+        public WaveformDisplayPanel(Oscillator oscillator) {
+            this.oscillator = oscillator;
+            setPreferredSize(new Dimension(width, height));
+            setBackground(new Color(30, 30, 30));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            // Draw waveform
+            g2d.setColor(new Color(100, 200, 255));
+            double[] samples = oscillator.generateWaveformSamples();
+            for (int i = 0; i < samples.length - 1; i++) {
+                int x1 = (int) (i * (width / (double) samples.length));
+                int y1 = (int) ((0.5 - samples[i] * 0.4) * height);
+                int x2 = (int) ((i + 1) * (width / (double) samples.length));
+                int y2 = (int) ((0.5 - samples[i + 1] * 0.4) * height);
+                g2d.drawLine(x1, y1, x2, y2);
             }
-        };
-        graphPanel.setBounds(10, 10, 380, 200);
-        graphPanel.setBackground(new Color(20, 20, 20));
-        panel.add(graphPanel);
-
-        // Attack Knob
-        JKnob attackKnob = new JKnob(new Color(70, 70, 70), Color.BLACK);
-        attackKnob.setRange(1, 5000);
-        attackKnob.setRadius(25);
-        attackKnob.addKnobListener(value -> StandardVoice.setAttackTime(value));
-        attackKnob.addKnobGraphListener(value -> setAttackValueOnGraph(value));
-        attackKnob.setBounds(20, 220, 150, 150);
-        panel.add(attackKnob);
-
-        JLabel attackLabel = new JLabel("Attack");
-        attackLabel.setForeground(Color.WHITE);
-        attackLabel.setBounds(25, 270, 80, 20);
-        panel.add(attackLabel);
-
-        // Decay Knob
-        JKnob decayKnob = new JKnob(new Color(70, 70, 70), Color.BLACK);
-        decayKnob.setRange(1, 5000);
-        decayKnob.setRadius(25);
-        decayKnob.addKnobListener(value -> StandardVoice.setDecayTime(value));
-        decayKnob.addKnobGraphListener(value -> setDecayValueOnGraph(value));
-        decayKnob.setBounds(120, 220, 80, 80);
-        panel.add(decayKnob);
-
-        JLabel decayLabel = new JLabel("Decay");
-        decayLabel.setForeground(Color.WHITE);
-        decayLabel.setBounds(125, 270, 80, 20);
-        panel.add(decayLabel);
-
-        // Sustain Knob
-        JKnob sustainKnob = new JKnob(new Color(70, 70, 70), Color.BLACK);
-        sustainKnob.setRange(0.0, 1.0);
-        sustainKnob.setDefaultPosition(false,false,true);
-        sustainKnob.setRadius(25);
-        sustainKnob.addKnobListener(value -> StandardVoice.setSustainLevel(value));
-        sustainKnob.addKnobGraphListener(value -> setSustainValueOnGraph(value));
-        sustainKnob.setBounds(220, 220, 80, 80);
-        panel.add(sustainKnob);
-
-        JLabel sustainLabel = new JLabel("Sustain");
-        sustainLabel.setForeground(Color.WHITE);
-        sustainLabel.setBounds(225, 270, 80, 20);
-        panel.add(sustainLabel);
-
-        // Release Knob
-        JKnob releaseKnob = new JKnob(new Color(70, 70, 70), Color.BLACK);
-        releaseKnob.setRange(1, 5000);
-        releaseKnob.setRadius(25);
-        releaseKnob.addKnobListener(value -> StandardVoice.setReleaseTime(value));
-        releaseKnob.addKnobGraphListener(value -> setReleaseValueOnGraph(value));
-        releaseKnob.setBounds(320, 220, 80, 80);
-        panel.add(releaseKnob);
-
-        JLabel releaseLabel = new JLabel("Release");
-        releaseLabel.setForeground(Color.WHITE);
-        releaseLabel.setBounds(325, 270, 80, 20);
-        panel.add(releaseLabel);
-
-        return panel;
-    }
-
-
-
-    private JPanel createFooterPanel() {
-        JPanel panel = new JPanel();
-        panel.setBackground(new Color(20, 20, 20));
-
-        JLabel branding = new JLabel("core.SynthLogic.Flagzisizer VST by Flagz", SwingConstants.CENTER);
-        branding.setForeground(new Color(200, 200, 200));
-        branding.setFont(new Font("SansSerif", Font.ITALIC, 16));
-        panel.add(branding);
-
-        return panel;
+        }
     }
 }
+

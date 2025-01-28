@@ -4,18 +4,20 @@ import core.WaveformStrategy.WaveformStrategy;
 import core.WaveformStrategy.WaveformStrategyPicker;
 
 public interface Oscillator {
-    double generateSample(Note note, double phase, double velocity);
+    double generateSample(double baseFrequency, double volume);
+
     void setWaveformStrategy(WaveformStrategy waveformStrategy);
     WaveformStrategy getWaveformStrategy();
-    
-    void setGain(double gain);
     void setDetune(double detune);
-    void setFrequency(double frequency);
+    void setGain(double gain);
+    void setOctaveShift(double octaveShift);
+    double getOctaveShift();
+    void octaveUp();
+    void octaveDown();
     double getFrequency();
-    void setEnabled(boolean enabled);
-    boolean isEnabled();
-
     double getDetune();
-
     double getGain();
+    double[] generateWaveformSamples();
 }
+
+

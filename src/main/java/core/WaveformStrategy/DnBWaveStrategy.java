@@ -13,4 +13,9 @@ public class DnBWaveStrategy implements WaveformStrategy {
     public double getPhase() {
         return phase;
     }
+
+    @Override
+    public String Stringify() {
+        return "DnB";
+    }
 }

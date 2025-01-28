@@ -20,19 +20,5 @@ import javax.sound.sampled.SourceDataLine;
 
 public class MainSynthesizerImplementation {
     public static void main(String[] args) throws LineUnavailableException, MidiUnavailableException {
-        final AudioFormat af = new AudioFormat(44100, 16, 2, true, true);
-        SourceDataLine line = AudioSystem.getSourceDataLine(af);
-        line.open(af, 2500);
-        System.out.println(line.getBufferSize());
-        line.start();
-        WaveformStrategyPicker waveformStrategyPicker = new WaveformStrategyPicker();
-        EffectPicker effectPicker = new EffectPicker();
-        EffectController effectController = new EffectController(effectPicker);
-        Mixer mixer = new StandardMixer(line, effectPicker); // Mixer uses the EffectPicker
-        Tone tone = new StandardTone(line, waveformStrategyPicker, mixer);
-        GUIFrontendStuff gui = new GUIFrontendStuff(mixer, waveformStrategyPicker, tone, effectController);
-        Receiver receiver = null;
-        SynthController synthController = new SynthController(receiver, tone);
-        new KeyboardToSynth(tone).run();
     }
 }

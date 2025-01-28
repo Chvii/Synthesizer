@@ -40,16 +40,15 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
         this.minValue = minValue;
         this.maxValue = maxValue;
     }
-    public void setDefaultPosition(boolean counterclockwise, boolean middle, boolean clockwise){
-        if(counterclockwise){
-            theta = Math.PI + Math.PI / 4;
+    public void setDefaultPosition(boolean counterclockwise, boolean middle, boolean clockwise) {
+        if (counterclockwise) {
+            theta = minAngle;
+        } else if (middle) {
+            theta = (minAngle + maxAngle) / 2;
+        } else if (clockwise) {
+            theta = maxAngle;
         }
-        if(middle){
-            theta = (3 * Math.PI - Math.PI / 4) - (Math.PI + Math.PI / 4);
-        }
-        if(clockwise){
-            theta = 3 * Math.PI - Math.PI / 4;
-        }
+        repaint();
     }
 
     public void setRadius(int i){
@@ -212,4 +211,11 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
     @Override public void mouseEntered(MouseEvent e) {}
     @Override public void mouseExited(MouseEvent e) {}
     @Override public void mouseMoved(MouseEvent e) {}
+
+    public void setValue(double value) {
+        currentValue = Math.max(minValue, Math.min(maxValue, value));
+        double normalizedValue = (currentValue - minValue) / (maxValue - minValue);
+        theta = minAngle + normalizedValue * (maxAngle - minAngle);
+        repaint();
+    }
 }

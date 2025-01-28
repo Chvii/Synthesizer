@@ -6,9 +6,7 @@ import core.WaveformStrategy.WaveformStrategy;
 public class StandardVoice implements Voice {
     private final Note note;
     private volatile boolean isPlaying = true;
-    private double phase = 0;
     private double volume = 0.0;
-    private final WaveformStrategy waveformStrategy;
     private boolean attackPhase = true;
     private static double attackTime = 0.1;
     private boolean decayPhase = false;
@@ -16,28 +14,28 @@ public class StandardVoice implements Voice {
     private static double sustainLevel = 1.0;
     private static double releaseTime = 0.1;
     private double velocity;
-    private static double octave = 1;
 
-    public StandardVoice(Note note, double velocity, WaveformStrategy waveformStrategy) {
+    private Oscillator[] oscillators = new Oscillator[3]; // Three oscillators
+
+    public StandardVoice(Note note, double velocity, Oscillator[] oscillators) {
         this.note = note;
         this.velocity = velocity;
-
-        this.waveformStrategy = waveformStrategy;
+        this.oscillators = oscillators;
     }
 
     @Override
     public synchronized double[] generateAudio() {
         double[] buffer = new double[ConstantValues.BUFFER_SIZE];
-        if(attackPhase && isPlaying){
+        if (attackPhase && isPlaying) {
             volume += attackTime;
         }
-        if(volume >= 1.0 && isPlaying){
+        if (volume >= 1.0 && isPlaying) {
             attackPhase = false;
             decayPhase = true;
         }
-        if(decayPhase && isPlaying){
+        if (decayPhase && isPlaying) {
             volume -= decayTime;
-            if(volume <= sustainLevel && isPlaying){
+            if (volume <= sustainLevel && isPlaying) {
                 decayPhase = false;
                 volume = sustainLevel;
             }
@@ -45,25 +43,20 @@ public class StandardVoice implements Voice {
 
         if (volume <= 0.0) return buffer;
 
-        double step = 2 * Math.PI * note.getFrequency() / ConstantValues.SAMPLE_RATE * octave;
-
+        double baseFrequency = note.getFrequency();
         for (int i = 0; i < buffer.length; i++) {
-            if(velocity<20){
-                velocity = 20;
+            for (Oscillator osc : oscillators) {
+                buffer[i] += osc.generateSample(baseFrequency, volume) / oscillators.length;
             }
-            buffer[i] = (double) waveformStrategy.generateSample(phase, volume)*(velocity/100);
-            phase += step;
-            if (phase > 2 * Math.PI) phase -= 2 * Math.PI;
         }
 
         if (!isPlaying) {
             volume -= releaseTime;
-            if (volume < 0){
+            if (volume < 0) {
                 volume = 0;
                 attackPhase = true;
                 decayPhase = false;
             }
-
         }
 
         return buffer;
@@ -76,39 +69,23 @@ public class StandardVoice implements Voice {
 
     @Override
     public boolean isStopped() {
-        if(!isPlaying && volume <= 0.0){
-            return true;
-        }
-        return false;
+        return !isPlaying && volume <= 0.0;
     }
+
     @Override
-    public Note getNote(){
+    public Note getNote() {
         return this.note;
     }
-    public static void increaseOctave() {
-        octave = octave * 2;
-    }
-
-    public static void decreaseOctave() {
-        octave = octave / 2;
-    }
-
-    public static double getOctave() {
-        return octave;
-    }
-    public static String getOctaveString(){
-        return String.valueOf(octave);
-    }
-
-    public static void setAttackTime(double time){
-        attackTime = 0.1/time;
+    public static void setAttackTime(double time) {
+        attackTime = 1.0 / (time * 1000 / ConstantValues.BUFFER_SIZE);
     }
     public static double getAttackTime(){
         return attackTime;
     }
-    public static void setDecayTime(double time){
-        decayTime = 0.1/time;
+    public static void setDecayTime(double time) {
+        decayTime = 1.0 / (time * 1000 / ConstantValues.BUFFER_SIZE);
     }
+
     public static double getDecayTime() {
         return decayTime;
     }
@@ -118,8 +95,8 @@ public class StandardVoice implements Voice {
     public static double getSustainLevel() {
             return sustainLevel;
     }
-    public static void setReleaseTime(double time){
-        releaseTime = 0.1/time;
+    public static void setReleaseTime(double time) {
+        releaseTime = 1.0 / (time * 1000 / ConstantValues.BUFFER_SIZE);
     }
     public static double getReleaseTime(){
         return releaseTime;

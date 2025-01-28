@@ -14,4 +14,9 @@ public class SawStrategy implements WaveformStrategy {
     public double getPhase() {
         return phase;
     }
+
+    @Override
+    public String Stringify() {
+        return "Saw";
+    }
 }

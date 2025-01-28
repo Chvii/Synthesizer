@@ -15,4 +15,9 @@ public class SquareStrategy implements WaveformStrategy {
     public double getPhase(){
         return phase;
     }
+
+    @Override
+    public String Stringify() {
+        return "Square";
+    }
 }

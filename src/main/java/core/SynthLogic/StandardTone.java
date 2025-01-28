@@ -1,57 +1,87 @@
 package core.SynthLogic;
 
-import core.SynthLogic.Effects.EffectRack;
-import core.WaveformStrategy.*;
-
+import core.WaveformStrategy.WaveformStrategy;
+import core.WaveformStrategy.WaveformStrategyPicker;
 import javax.sound.sampled.SourceDataLine;
 
 public class StandardTone implements Tone {
-    private Mixer mixer;
-    private double octave = 1;
+    private final Mixer mixer;
+    private WaveformStrategyPicker[] waveformPickers;
     private WaveformStrategy waveformStrategy;
-    private WaveformStrategyPicker waveformStrategyPicker;
-    private EffectRack effectRack;
+    private Oscillator[] oscillators;
 
-    public StandardTone(SourceDataLine line, WaveformStrategyPicker waveformStrategyPicker, Mixer mixer) {
+    public StandardTone(SourceDataLine line, WaveformStrategyPicker[] waveformPickers, Mixer mixer) {
         this.mixer = mixer;
-        this.waveformStrategyPicker = waveformStrategyPicker;
+        this.waveformPickers = waveformPickers;
+        this.oscillators = createOscillators(); // Oscillators are created dynamically
         mixer.start();
     }
 
-    public Mixer getMixer() {
-        return mixer;
+    private Oscillator[] createOscillators() {
+        Oscillator[] oscillators = new Oscillator[3]; // Example: 3 oscillators
+        for (int i = 0; i < oscillators.length; i++) {
+            oscillators[i] = new StandardOscillator(
+                    waveformPickers[i].chooseWaveformStrategy(),
+                   0,  // Slight detune for stereo richness
+                    1.0,            // Gain
+                    1.0               // Octave shift
+            );
+        }
+        return oscillators;
     }
 
     @Override
-    public void play(Note note, double velocity) { // TODO: Include midiKey as a parameter, or figure out how to implement octave switch with midi controller
-        if (mixer.getActiveVoices().stream().anyMatch(v -> v.getNote() == note)){
+    public Oscillator[] getOscillators() {
+        return oscillators;
+    }
+
+    @Override
+    public Oscillator getOscillator(int i) {
+        return oscillators[i];
+    }
+
+    @Override
+    public void play(Note note, double velocity) {
+        if (mixer.getActiveVoices().stream().anyMatch(v -> v.getNote() == note)) {
             mixer.overrideVoice(note);
         }
-        this.waveformStrategy = waveformStrategyPicker.chooseWaveformStrategy();
-        mixer.addVoice(new StandardVoice(note, velocity, waveformStrategy));
+        // Create new oscillators for the voice
+        Oscillator[] voiceOscillators = new Oscillator[oscillators.length];
+        for (int i = 0; i < oscillators.length; i++) {
+            Oscillator original = oscillators[i];
+            voiceOscillators[i] = new StandardOscillator(
+                    original.getWaveformStrategy(),
+                    original.getDetune(),
+                    original.getGain(),
+                    original.getOctaveShift()
+            );
+        }
+        mixer.addVoice(new StandardVoice(note, velocity, voiceOscillators));
     }
-    public void setWaveformStrategy(WaveformStrategy waveformStrategy){
-        this.waveformStrategy = waveformStrategy;
-    }
 
-
-
-    public void stop(Note note) { // TODO: Include midiKey as a parameter, or figure out how to implement octave switch with midi controller
+    @Override
+    public void stop(Note note) {
         mixer.removeVoice(note);
     }
 
-    public void increaseOctave() {
-        octave = octave * 2;
+    @Override
+    public void nextWaveform(int i) {
+        waveformPickers[i].nextWaveform();
     }
 
-    public void decreaseOctave() {
-        octave = octave / 2;
+
+    @Override
+    public void previousWaveform(int i) {
+        waveformPickers[i].previousWaveform();
     }
 
-    public double getOctave() {
-        return octave;
+    @Override
+    public void updateOscillatorWaveforms(int i) {
+        oscillators[i].setWaveformStrategy(waveformPickers[i].chooseWaveformStrategy());
     }
-    public String getOctaveString(){
-        return String.valueOf(octave);
+
+    @Override
+    public String getWaveformName(int oscillatorIndex) {
+        return waveformPickers[oscillatorIndex].StringifyWaveformSelector();
     }
 }

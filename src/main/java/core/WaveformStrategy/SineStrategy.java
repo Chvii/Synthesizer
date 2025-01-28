@@ -17,4 +17,9 @@ public class SineStrategy implements WaveformStrategy {
     public double getPhase() {
         return phase;
     }
+
+    @Override
+    public String Stringify() {
+        return "Sine";
+    }
 }
