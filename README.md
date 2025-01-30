@@ -33,7 +33,7 @@ fast as possible), but it does what a very (VERY) basic synthesizer should do. H
 * **Waveform display looks like crud**
 [FIXED..?]
 * **No ADSR or way to control/change the envelope**
-[FIXED]
+[FIXED] (Although, ADSR is currently broken and needs to be redone
 * **What is the point of this?**
 _Not sure. Maybe if I end up making a cool synthesizer that does something neat, I can turn it into a vst plugin. (Whether that means that I have to learn C++ and then rewrite the whole thing in C++; I am not sure... But I hope not)._
 
