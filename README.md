@@ -18,7 +18,7 @@ fast as possible), but it does what a very (VERY) basic synthesizer should do. H
 * Make a GUI for interacting with the synthesizer. **(ONGOING)**
 * Implement different effects (reverb, delay, saturation, chorus). **(ONGOING)**
 * Add a sequencer with an intuitive GUI.
-* Figure out how to make a filter.
+* Figure out how to make a filter. **(DONE)**
 * Re-assignable LFO.
 * Add multiple oscillators.
 * Add granular synthesis functionality (because granular synths are cool and not enough people know about them).
