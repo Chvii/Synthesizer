@@ -371,12 +371,14 @@ public class GUIFrontendStuff extends JFrame {
 
             // Show knobs only for DelayVerb
             if (selectedEffect == EffectPicker.EffectEnums.DELAYVERB) {
+                panel.removeAll(); // removes the menu as well, oops
                 addDelayVerbKnobs(panel);
             } else if (selectedEffect == EffectPicker.EffectEnums.FILTER) {
+                panel.removeAll();
                 addFilterKnobs(panel);
             }
             else {
-                panel.removeAll();
+                panel.removeAll(); // removes the menu as well, oops
                 panel.add(effectDropdown); // Re-add dropdown
             }
             panel.revalidate();
@@ -538,7 +540,7 @@ public class GUIFrontendStuff extends JFrame {
     }
 
 
-    private class WaveformDisplayPanel extends JPanel {
+    class WaveformDisplayPanel extends JPanel {
         private final Oscillator oscillator;
         private final int width = 225;
         private final int height = 140;
