@@ -18,6 +18,10 @@ import javax.sound.sampled.SourceDataLine;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -44,7 +48,7 @@ public class GUIFrontendStuff extends JFrame {
 
         // Frame Setup
         setTitle("Flagzisizer VST");
-        setSize(1500, 1200);
+        setSize(1500, 1100);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(null);
         setResizable(false);
@@ -146,7 +150,7 @@ public class GUIFrontendStuff extends JFrame {
         octUp.addActionListener(e -> updateOctave(i, oscillator, octaveLabel, 2));
         octDown.addActionListener(e -> updateOctave(i, oscillator, octaveLabel, 0.5));
 
-        gbc.gridx = 5; // 6th column (0-based index 5)
+        gbc.gridx = 5; // 6th column
         gbc.gridwidth = 1;
         gbc.weighty = 0;
         gbc.anchor = GridBagConstraints.NORTHEAST;
@@ -179,14 +183,43 @@ public class GUIFrontendStuff extends JFrame {
         JPanel knobPanel = new JPanel(new GridLayout(1, 2, 20, 0));
         knobPanel.setBackground(new Color(45, 45, 48));
 
-        JKnob detuneKnob = createStyledKnob("Detune", -50, 50, 0, new Color(200, 120, 80));
+        // --- Info panel showing knob value ---
+        JToolTip knobInfoPanel = knobPanel.createToolTip();
+        knobInfoPanel.setBackground(new Color(40, 40, 44));
+        knobInfoPanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(100, 100, 100), 1),"",
+                TitledBorder.LEFT,
+                TitledBorder.TOP,
+                new Font("Segoe UI", Font.BOLD, 12),
+                new Color(180, 200, 200)
+        ));
+        knobInfoPanel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        knobInfoPanel.setForeground(Color.white);
+
+        // --- Detune ---
+
+        JKnob detuneKnob = createStyledKnob("Detune", -10, 10, 0, new Color(200, 120, 80));
         detuneKnob.setRadius(10);
-        detuneKnob.addKnobListener(oscillator::setDetune);
+        detuneKnob.addKnobListener(e -> {
+            oscillator.setDetune(e);
+            knobInfoPanel.setTipText("D: " + detuneKnob.getCurrentValue());
+            knobInfoPanel.repaint();
+
+        });
+        knobPanel.add(knobInfoPanel);
+
+
+
+
         knobPanel.add(createKnobPanel(detuneKnob, "DETUNE"));
 
         JKnob gainKnob = createStyledKnob("Gain", 0.0, 1.0, 1.0, new Color(80, 160, 200));
-        gainKnob.setRadius(10);
-        gainKnob.addKnobListener(oscillator::setGain);
+        gainKnob.setRadius(10); //TODO: gain knob gets reset to 0 instead of 1.
+        gainKnob.addKnobListener(e -> {
+            oscillator.setGain(e);
+            knobInfoPanel.setTipText("G: " + gainKnob.getCurrentValue());
+            knobInfoPanel.repaint();
+        });
         knobPanel.add(createKnobPanel(gainKnob, "GAIN"));
 
         gbc.gridx = 1;
@@ -214,7 +247,6 @@ public class GUIFrontendStuff extends JFrame {
         oscillator.setOctaveShift(newOctave);
         octaveLabel.setText(String.format("%.1fx", newOctave));
     }
-
     private JButton createIconButton(String text, Color color) {
         JButton button = new JButton(text);
         button.setBackground(new Color(60, 60, 60));
@@ -234,8 +266,13 @@ public class GUIFrontendStuff extends JFrame {
         knob.setRange(min, max);
         knob.setValue(init);
         knob.setRadius(20);
-        // Removed label styling calls
         return knob;
+    }
+    private ArrayList getRange(JKnob knob){
+        ArrayList<Double>rangeArray = new ArrayList<>();
+        rangeArray.add(knob.getMinValue());
+        rangeArray.add(knob.getMaxValue());
+        return rangeArray;
     }
 
     private void updateOctaveLabel(int index, Oscillator oscillator) {
@@ -326,7 +363,7 @@ public class GUIFrontendStuff extends JFrame {
 
         for (int i = 0; i < 4; i++) {
             JKnob knob = createStyledKnob(labels[i], 0.01, 5.0, 0.1, colors[i]);
-            final int paramIndex = i; // Effectively final within the loop iteration
+            final int paramIndex = i;
             knob.addKnobListener(value -> {
                 switch (paramIndex) { // Use paramIndex here
                     case 0 -> {
@@ -371,14 +408,16 @@ public class GUIFrontendStuff extends JFrame {
 
             // Show knobs only for DelayVerb
             if (selectedEffect == EffectPicker.EffectEnums.DELAYVERB) {
-                panel.removeAll(); // removes the menu as well, oops
+                panel.removeAll();
+                panel.add(effectDropdown);
                 addDelayVerbKnobs(panel);
             } else if (selectedEffect == EffectPicker.EffectEnums.FILTER) {
                 panel.removeAll();
+                panel.add(effectDropdown);
                 addFilterKnobs(panel);
             }
             else {
-                panel.removeAll(); // removes the menu as well, oops
+                panel.removeAll();
                 panel.add(effectDropdown); // Re-add dropdown
             }
             panel.revalidate();
@@ -394,7 +433,7 @@ public class GUIFrontendStuff extends JFrame {
         cutoffKnob.setBounds(34,135,150,150);
         cutoffKnob.setRange(0,1);
         cutoffKnob.setRadius(60);
-        cutoffKnob.setDefaultPosition(false,false,true);
+        cutoffKnob.setValue(1);
         cutoffKnob.addKnobListener(value ->{
             FilterEffect filterEffect = (FilterEffect) effectController.getCurrentEffect();
             filterEffect.setCutoff((float) value);

@@ -1,11 +1,18 @@
 package core.Visuals;
 
+import core.Misc.FunctionalValueSetter;
+
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.text.DecimalFormat;
 import java.util.function.DoubleConsumer;
+
+import static java.awt.event.MouseEvent.BUTTON2;
+import static java.awt.event.MouseEvent.BUTTON3;
 
 class JKnob extends JComponent implements MouseListener, MouseMotionListener {
 
@@ -18,6 +25,7 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
     private double minValue = 0.0; // Minimum value for the knob
     private double maxValue = 1.0; // Maximum value for the knob
     private double currentValue; // Current value of the knob
+    private double defaultPositionValue; // Default position (angle) to reset to
     private Color knobColor;
     private Color spotColor;
     private DoubleConsumer valueSetter;
@@ -28,6 +36,7 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
 
     public JKnob(Color knobColor, Color spotColor) {
         this.theta = minAngle;
+        this.defaultPositionValue = theta;
         this.knobColor = knobColor;
         this.spotColor = spotColor;
         this.pressedOnKnob = false;
@@ -39,39 +48,64 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
     public void setRange(double minValue, double maxValue) {
         this.minValue = minValue;
         this.maxValue = maxValue;
+        repaint();
     }
+
+    public double getMinValue() {
+        return this.minValue;
+    }
+
+    public double getMaxValue() {
+        return this.maxValue;
+    }
+
+    public String getCurrentValue() {
+        DecimalFormat numberFormat = new DecimalFormat("0.0");
+        return String.valueOf(numberFormat.format(currentValue)); // Corrected to return currentValue
+    }
+
+    public void setToDefaultPosition() {
+        theta = defaultPositionValue;
+        updateCurrentValueFromTheta(); // Update currentValue based on theta
+        currentValue = 0;
+        getCurrentValue(); // to fix tooltip on knob resets
+        repaint();
+    }
+
+    private void updateCurrentValueFromTheta() {
+        double normalizedValue = (theta - minAngle) / (maxAngle - minAngle);
+        currentValue = minValue + normalizedValue * (maxValue - minValue);
+    }
+
     public void setDefaultPosition(boolean counterclockwise, boolean middle, boolean clockwise) {
         if (counterclockwise) {
             theta = minAngle;
+            defaultPositionValue = theta;
         } else if (middle) {
             theta = (minAngle + maxAngle) / 2;
+            defaultPositionValue = theta;
         } else if (clockwise) {
             theta = maxAngle;
+            defaultPositionValue = theta;
         }
         repaint();
     }
 
-    public void setRadius(int i){
+    public void setRadius(int i) {
         this.radius = i;
-        this.spotRadius = i/10;
+        this.spotRadius = i / 10;
     }
-    public double getMinAngle(){
+
+    public double getMinAngle() {
         return minAngle;
     }
-    public double getRadius(){
+
+    public double getRadius() {
         return radius;
     }
 
-    /**
-     * Paint the knob with a circular surface and spot.
-     */
     @Override
     public void paint(Graphics g) {
-
-        // Make a border [OMITTED CAUSE IT LOOKS BAD]
-        // g.setColor(Color.BLACK);
-        // g.fillOval((int)Math.sin(radius) - radius / 12,(int)Math.cos(radius) - radius / 12,2 * radius + radius / 6,2 * radius + radius / 6);
-
         // Draw the knob
         g.setColor(knobColor);
         g.fillOval(0, 0, 2 * radius, 2 * radius);
@@ -82,17 +116,11 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
         g.fillOval(pt.x - spotRadius, pt.y - spotRadius, 2 * spotRadius, 2 * spotRadius);
     }
 
-    /**
-     * Get the preferred size of the knob.
-     */
     @Override
     public Dimension getPreferredSize() {
-        return new Dimension(2*radius, 2 * radius);
+        return new Dimension(2 * radius, 2 * radius);
     }
 
-    /**
-     * Calculate the center of the spot.
-     */
     private Point getSpotCenter() {
         int r = radius - spotRadius;
         int x = (int) (radius + r * Math.sin(theta));
@@ -100,13 +128,10 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
         return new Point(x, y);
     }
 
-    /**
-     * Determine if a point is within the knob's circular bounds.
-     */
     private boolean isOnKnob(Point pt) {
         int dx = pt.x - radius;
         int dy = pt.y - radius;
-        return dx * dx + dy * dy <= radius * radius; // Check if within the circle
+        return dx * dx + dy * dy <= radius * radius;
     }
 
     @Override
@@ -114,18 +139,32 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
         Point mouseLoc = e.getPoint();
         if (isOnKnob(mouseLoc)) {
             pressedOnKnob = true;
-            lastY = e.getY(); // Record the initial y-coordinate
+            lastY = e.getY();
+            if (e.getButton() == BUTTON3) {
+                setToDefaultPosition();
+                // Pass currentValue instead of defaultPositionValue (angle)
+                if (valueSetter != null) {
+                    valueSetter.accept(currentValue);
+                }
+                if (graphValueSetter != null) {
+                    graphValueSetter.accept(currentValue);
+                }
+                repaint();
+            }
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        pressedOnKnob = false;
+        if (e.getButton() != BUTTON3) {
+            pressedOnKnob = false;
+        }
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
         if (pressedOnKnob) {
+
             int currentY = e.getY();
             int deltaY = lastY - currentY;
 
@@ -134,12 +173,10 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
             } else if (deltaY < 0) {
                 theta -= 0.05 * Math.abs(deltaY) / 4;
             }
-
             theta = clampAngle(theta);
             lastY = currentY;
 
-            double normalizedValue = (theta - minAngle) / (maxAngle - minAngle);
-            currentValue = minValue + normalizedValue * (maxValue - minValue);
+            updateCurrentValueFromTheta(); // Update currentValue
 
             if (valueSetter != null) {
                 valueSetter.accept(currentValue);
@@ -160,62 +197,44 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
         this.graphValueSetter = graphValueSetter;
     }
 
-    /**
-     * Clamp the angle to ensure it stays between minAngle and maxAngle.
-     */
     private double clampAngle(double angle) {
-        if (angle < minAngle) {
-            return minAngle;
-        }
-        if (angle > maxAngle) {
-            return maxAngle;
-        }
-        return angle;
+        return Math.max(minAngle, Math.min(angle, maxAngle));
     }
 
-    /**
-     * Normalize an angle to the range [0, 2π].
-     */
     private double normalizeAngle(double angle) {
-        while (angle < 0) {
-            angle += 2 * Math.PI;
-        }
-        while (angle >= 2 * Math.PI) {
-            angle -= 2 * Math.PI;
-        }
-        return angle;
+        angle %= 2 * Math.PI;
+        return angle < 0 ? angle + 2 * Math.PI : angle;
     }
 
-    /**
-     * Set the minimum angle for the knob.
-     * @param angle The minimum angle in radians.
-     */
     public void setMinAngle(double angle) {
         this.minAngle = normalizeAngle(angle);
     }
 
-    /**
-     * Set the maximum angle for the knob.
-     * @param angle The maximum angle in radians.
-     */
     public void setMaxAngle(double angle) {
         this.maxAngle = normalizeAngle(angle);
     }
-    public double getModifierParameter(){
-        //return modifierParameter;
+
+    public double getModifierParameter() {
         return 0;
     }
 
-    // Unused mouse event handlers
-    @Override public void mouseClicked(MouseEvent e) {}
-    @Override public void mouseEntered(MouseEvent e) {}
-    @Override public void mouseExited(MouseEvent e) {}
-    @Override public void mouseMoved(MouseEvent e) {}
+    @Override
+    public void mouseClicked(MouseEvent e) {}
+
+    @Override
+    public void mouseEntered(MouseEvent e) {}
+
+    @Override
+    public void mouseExited(MouseEvent e) {}
+
+    @Override
+    public void mouseMoved(MouseEvent e) {}
 
     public void setValue(double value) {
         currentValue = Math.max(minValue, Math.min(maxValue, value));
         double normalizedValue = (currentValue - minValue) / (maxValue - minValue);
         theta = minAngle + normalizedValue * (maxAngle - minAngle);
+        defaultPositionValue = theta;
         repaint();
     }
 }
