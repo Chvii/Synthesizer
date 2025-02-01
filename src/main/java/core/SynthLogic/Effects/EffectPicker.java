@@ -29,4 +29,8 @@ public class EffectPicker implements EffectRack {
     public double[] applyEffect(double[] mixBuffer) {
         return currentEffect.applyEffect(mixBuffer);
     }
+    @Override
+    public EffectRack getEffect() {
+        return this;
+    }
 }

@@ -14,7 +14,7 @@ public class StandardTone implements Tone {
         this.mixer = mixer;
         this.waveformPickers = waveformPickers;
         this.oscillators = createOscillators(); // Oscillators are created dynamically
-        mixer.start();
+        mixer.startMixer();
     }
 
     private Oscillator[] createOscillators() {
@@ -22,7 +22,7 @@ public class StandardTone implements Tone {
         for (int i = 0; i < oscillators.length; i++) {
             oscillators[i] = new StandardOscillator(
                     waveformPickers[i].chooseWaveformStrategy(),
-                   0,  // Slight detune for stereo richness
+                    0,  // Slight detune for stereo richness
                     1.0,            // Gain
                     1.0               // Octave shift
             );

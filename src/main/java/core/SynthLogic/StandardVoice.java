@@ -93,7 +93,7 @@ public class StandardVoice implements Voice {
         sustainLevel = level;
     }
     public static double getSustainLevel() {
-            return sustainLevel;
+        return sustainLevel;
     }
     public static void setReleaseTime(double time) {
         releaseTime = 1.0 / (time * 1000 / ConstantValues.BUFFER_SIZE);

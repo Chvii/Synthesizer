@@ -76,4 +76,8 @@ public class DelayVerb implements EffectRack {
             stereoMode = false;
         }
     }
+    @Override
+    public EffectRack getEffect() {
+        return this;
+    }
 }

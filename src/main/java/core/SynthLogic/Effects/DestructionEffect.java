@@ -35,4 +35,8 @@ public class DestructionEffect implements EffectRack {
         double randomDistortion = distortionValue / amount;
         return randomDistortion;
     }
+    @Override
+    public EffectRack getEffect() {
+        return this;
+    }
 }

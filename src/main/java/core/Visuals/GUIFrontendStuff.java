@@ -23,11 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
 
 public class GUIFrontendStuff extends JFrame {
     private WaveformStrategyPicker[] waveformPickers;
@@ -280,29 +275,29 @@ public class GUIFrontendStuff extends JFrame {
     }
 
     private double getAttackValueOnGraph() {
-        return attackValue * 1000; // Convert seconds to milliseconds for visual scale
+        return attackValue * 20; // Convert seconds to milliseconds for visual scale
     }
-    private void setAttackValueOnGraph(double attackValu){
+    private void setAttackValueOnGraph(double attackValue){
         this.attackValue = attackValue;
     }
 
     private double getDecayValueOnGraph() {
-        return decayValue * 1000;
+        return decayValue * 20;
     }
     private void setDecayValueOnGraph(double decayValue){
         this.decayValue = decayValue;
     }
 
     private double getSustainValueOnGraph() {
-        return (1 - sustainValue) * 100; // Convert 0-1 range to pixel height
+        return (1-sustainValue) * 200; // Convert 0-1 range to pixel height
     }
 
     private void setSustainValueOnGraph(double sustainValue) {
-        this.sustainValue = sustainValue;  // Was incorrectly assigning to itself
+        this.sustainValue = sustainValue;
     }
 
     private double getReleaseValueOnGraph() {
-        return releaseValue * 1000;
+        return releaseValue * 500;
     }
     private void setReleaseValueOnGraph(double releaseValue){
         this.releaseValue = releaseValue;
@@ -312,7 +307,7 @@ public class GUIFrontendStuff extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(45, 45, 48));
         panel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(100, 100, 100), 1),
+                BorderFactory.createLineBorder(new Color(40, 40, 60), 1),
                 "ENVELOPE",
                 TitledBorder.LEFT,
                 TitledBorder.TOP,
@@ -331,14 +326,13 @@ public class GUIFrontendStuff extends JFrame {
                 g2.drawString(String.format("D: %.2fs", decayValue), 100, 20);
                 g2.drawString(String.format("S: %.2f", sustainValue), 190, 20);
                 g2.drawString(String.format("R: %.2fs", releaseValue), 280, 20);
-                g2.setBackground(new Color(30, 30, 30));
                 g2.setColor(new Color(100, 200, 255));
                 g2.setStroke(new BasicStroke(2));
 
                 int[] xPoints = {
                         0, /* initial pos*/
-                        (int) (getAttackValueOnGraph()/250), /* attack time */
-                        (int) (getAttackValueOnGraph()/250) + (int) (getDecayValueOnGraph()/250), /* decay time */
+                        (int) (getAttackValueOnGraph()), /* attack time */
+                        (int) (getAttackValueOnGraph()) + (int) (getDecayValueOnGraph()), /* decay time */
                         280, /* release time */
                         280 + (int) (getReleaseValueOnGraph()/250)};
                 int[] yPoints = {
@@ -351,43 +345,41 @@ public class GUIFrontendStuff extends JFrame {
                 repaint();
             }
         };
+        graphPanel.setBackground(new Color(30, 30, 30));
         panel.add(graphPanel, BorderLayout.CENTER);
 
         // Knobs panel
         JPanel knobPanel = new JPanel(new GridLayout(1, 4, 10, 0));
         knobPanel.setBackground(new Color(45, 45, 48));
 
-        String[] labels = {"ATTACK", "DECAY", "SUSTAIN", "RELEASE"};
-        Color[] colors = {new Color(200, 120, 80), new Color(120, 200, 80),
-                new Color(80, 160, 200), new Color(180, 100, 200)};
 
-        for (int i = 0; i < 4; i++) {
-            JKnob knob = createStyledKnob(labels[i], 0.01, 5.0, 0.1, colors[i]);
-            final int paramIndex = i;
-            knob.addKnobListener(value -> {
-                switch (paramIndex) { // Use paramIndex here
-                    case 0 -> {
-                        StandardVoice.setAttackTime(value);
-                        setAttackValueOnGraph(value);
-                    }
-                    case 1 -> {
-                        StandardVoice.setDecayTime(value);
-                        setDecayValueOnGraph(value);
-                    }
-                    case 2 -> {
-                        StandardVoice.setSustainLevel(value);
-                        setSustainValueOnGraph(value);
-                    }
-                    case 3 -> {
-                        StandardVoice.setReleaseTime(value);
-                        setReleaseValueOnGraph(value);
-                    }
-                }
-                graphPanel.repaint();
-            });
-            // Moved outside the listener to the correct position in the loop
-            knobPanel.add(createKnobPanel(knob, labels[i]));
-        }
+
+        JKnob attackKnob = createStyledKnob("ATTACK", 0.01, 5.0, 0.1, new Color(200, 120, 80));
+        attackKnob.addKnobListener(value ->{
+            StandardVoice.setAttackTime(value);
+            setAttackValueOnGraph(value);
+        });
+        JKnob decayKnob = createStyledKnob("DECAY", 0.01, 5.0, 0.1, new Color(120, 200, 80));
+        decayKnob.addKnobListener(value ->{
+            StandardVoice.setDecayTime(value);
+            setDecayValueOnGraph(value);
+        });
+        JKnob sustainKnob = createStyledKnob("SUSTAIN", 0.01, 1.0, 1.0, new Color(80, 160, 200));
+        sustainKnob.addKnobListener(value -> {
+            StandardVoice.setSustainLevel(value);
+            setSustainValueOnGraph(value);
+        });
+        JKnob releaseKnob = createStyledKnob("RELEASE", 0.01, 50.0, 0.1, new Color(180, 100, 200));
+        releaseKnob.addKnobListener(value -> {
+            StandardVoice.setReleaseTime(value);
+            setReleaseValueOnGraph(value);
+        });
+        knobPanel.add(attackKnob);
+        knobPanel.add(decayKnob);
+        knobPanel.add(sustainKnob);
+        knobPanel.add(releaseKnob);
+        graphPanel.repaint();
+
         panel.add(knobPanel, BorderLayout.SOUTH);
         panel.setBackground(new Color(30, 30, 30));
         return panel;
@@ -609,4 +601,3 @@ public class GUIFrontendStuff extends JFrame {
         }
     }
 }
-

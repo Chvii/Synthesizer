@@ -21,10 +21,11 @@ public class StandardMixer implements Mixer {
     private EffectRack effectRack;
     private final ThreadLocal<double[]> threadLocalMixBuffer = ThreadLocal.withInitial(() -> new double[ConstantValues.BUFFER_SIZE]);
     private final ThreadLocal<byte[]> threadLocalByteBuffer = ThreadLocal.withInitial(() -> new byte[ConstantValues.BUFFER_SIZE*2]);
+    private ArrayList<EffectRack> activeEffects;
 
-
-
+    ;
     public StandardMixer(SourceDataLine line, EffectRack effectRack) {
+        activeEffects = new ArrayList<>();
         this.effectRack = effectRack;
         this.line = line;
         this.activeVoices = new CopyOnWriteArrayList<>();
@@ -43,6 +44,8 @@ public class StandardMixer implements Mixer {
             listener.updateWaveform(mixBuffer);
         }
     }
+
+
 
     @Override
     public void addVoice(Voice voice) {
@@ -69,7 +72,7 @@ public class StandardMixer implements Mixer {
     }
 
     @Override
-    public synchronized void start() {
+    public synchronized void startMixer() {
         new Thread(() -> {
             double[] mixBuffer = threadLocalMixBuffer.get();
             byte[] byteBuffer = threadLocalByteBuffer.get();
@@ -108,5 +111,10 @@ public class StandardMixer implements Mixer {
                 activeVoices.removeIf(Voice::isStopped);
             }
         }).start();
+    }
+
+    @Override
+    public ArrayList<EffectRack> getActiveEffects() {
+        return activeEffects;
     }
 }

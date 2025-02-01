@@ -1,7 +1,9 @@
 package core.SynthLogic;
 
+import core.SynthLogic.Effects.EffectRack;
 import core.Visuals.WaveformUpdateListener;
 
+import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public interface Mixer {
@@ -17,5 +19,7 @@ public interface Mixer {
 
     CopyOnWriteArrayList<Voice> getActiveVoices();
 
-    void start();
+    void startMixer();
+
+    ArrayList<EffectRack> getActiveEffects();
 }

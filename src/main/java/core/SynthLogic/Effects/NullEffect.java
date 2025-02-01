@@ -5,4 +5,9 @@ public class NullEffect implements EffectRack{
     public double[] applyEffect(double[] mixBuffer) {
         return mixBuffer;
     }
+
+    @Override
+    public EffectRack getEffect() {
+        return this;
+    }
 }

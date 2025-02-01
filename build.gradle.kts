@@ -1,25 +1,18 @@
 plugins {
-    application
-    id("org.openjfx.javafxplugin") version "0.1.0" // Use the latest version if available
+    // Tell Gradle that this is a java project
+    id ("java")
 }
 
 repositories {
     mavenCentral()
 }
 
-javafx {
-    version = "21" // Match your JDK version
-    modules = listOf(
-            "javafx.controls",
-            "javafx.fxml",
-            "javafx.graphics"
-    )
-}
+dependencies {
+    // Use JUnit Jupiter API for testing.
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.3")
+    // Use JUnit Jupiter Engine for testing.
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.3")
 
-application {
-    mainClass.set("com.core.Visuals.SynthApplication")
-    applicationDefaultJvmArgs = listOf(
-            "--module-path", "/Users/christoffer/javafx-sdk-17/lib",
-            "--add-modules", "javafx.controls,javafx.fxml"
-    )
+    // https://mvnrepository.com/artifact/org.hamcrest/hamcrest
+    testImplementation("org.hamcrest:hamcrest:3.0")
 }

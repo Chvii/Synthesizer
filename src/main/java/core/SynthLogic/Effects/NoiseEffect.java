@@ -17,4 +17,9 @@ public class NoiseEffect implements EffectRack{
         return mixBuffer;
     }
 
+    @Override
+    public EffectRack getEffect() {
+        return this;
+    }
+
 }

@@ -1,5 +1,4 @@
 package core.SynthLogic.Controller;
-
 import core.SynthLogic.Tone;
 
 import javax.sound.midi.MidiMessage;
@@ -13,8 +12,7 @@ import java.security.Key;
 
 /**
  * Create a connection between a musical keyboard (transmitter) and an internal
- * synthesizer.  You should first run {@link MidiDeviceDisplay} to discover the
- * device names for each of these.
+ * synthesizer.
  *
  * @author Knute Snortum
  * @version 2017/06/17
@@ -24,8 +22,7 @@ public class KeyboardToSynth {
     /**
      * Name values can have the class name, (see {@link MidiSystem}), the device
      * name or both. Use a pound sign (#) to separate the class and device name.
-     * Get device names from the {@link MidiDeviceDisplay} program, or leave
-     * empty for default.<p>
+     *
      *
      * {@code javax.sound.midi.Transmitter#USB Uno MIDI Interface}<br>
      * {@code javax.sound.midi.Synthesizer#Microsoft MIDI Mapper}<br>

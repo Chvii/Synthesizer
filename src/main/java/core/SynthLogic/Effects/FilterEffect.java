@@ -154,5 +154,9 @@ public class FilterEffect implements EffectRack {
             calculateCoefficients();
         }
     }
+    @Override
+    public EffectRack getEffect() {
+        return this;
+    }
 
 }

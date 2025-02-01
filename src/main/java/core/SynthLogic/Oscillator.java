@@ -20,4 +20,3 @@ public interface Oscillator {
     double[] generateWaveformSamples();
 }
 
-
