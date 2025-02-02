@@ -2,4 +2,9 @@
 <component inheritJdk="true">
 	<contentEntry url="file://$MODULE_DIR$/../../src/main"/>
 	<contentEntry url="file://$MODULE_DIR$/../../src/main"/>
+	<levels>
+		<level name="Gradle: com.github.wendykierp:JTransforms:3.1" value="project"/>
+		<level name="Gradle: pl.edu.icm:JLargeArrays:1.5" value="project"/>
+		<level name="Gradle: org.apache.commons:commons-math3:3.5" value="project"/>
+	</levels>
 </component>

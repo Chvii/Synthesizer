@@ -14,7 +14,7 @@ import java.util.function.DoubleConsumer;
 import static java.awt.event.MouseEvent.BUTTON2;
 import static java.awt.event.MouseEvent.BUTTON3;
 
-class JKnob extends JComponent implements MouseListener, MouseMotionListener {
+public class JKnob extends JComponent implements MouseListener, MouseMotionListener {
 
     private int radius = 50; // Radius of the knob
     private int spotRadius = 5; // Spot radius for visualization
@@ -30,6 +30,7 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
     private Color spotColor;
     private DoubleConsumer valueSetter;
     private FunctionalValueSetter graphValueSetter;
+    private boolean isLogarithmic = false;
 
     private boolean pressedOnKnob; // Track if the user clicked on the knob
     private int lastY; // Track the last y-coordinate of the mouse
@@ -49,6 +50,9 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
         this.minValue = minValue;
         this.maxValue = maxValue;
         repaint();
+    }
+    public void setLogarithmic(){
+        isLogarithmic = true;
     }
 
     public double getMinValue() {
@@ -74,7 +78,12 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
 
     private void updateCurrentValueFromTheta() {
         double normalizedValue = (theta - minAngle) / (maxAngle - minAngle);
-        currentValue = minValue + normalizedValue * (maxValue - minValue);
+        if (isLogarithmic) {
+            // Logarithmic scaling: currentValue = min * (max/min)^normalized
+            currentValue = minValue * Math.pow(maxValue / minValue, normalizedValue);
+        } else {
+            currentValue = minValue + normalizedValue * (maxValue - minValue);
+        }
     }
 
     public void setDefaultPosition(boolean counterclockwise, boolean middle, boolean clockwise) {
@@ -232,9 +241,19 @@ class JKnob extends JComponent implements MouseListener, MouseMotionListener {
 
     public void setValue(double value) {
         currentValue = Math.max(minValue, Math.min(maxValue, value));
-        double normalizedValue = (currentValue - minValue) / (maxValue - minValue);
+        double normalizedValue;
+        if (isLogarithmic) {
+            // Invert logarithmic scaling to get normalizedValue
+            normalizedValue = Math.log(currentValue / minValue) / Math.log(maxValue / minValue);
+        } else {
+            normalizedValue = (currentValue - minValue) / (maxValue - minValue);
+        }
         theta = minAngle + normalizedValue * (maxAngle - minAngle);
         defaultPositionValue = theta;
         repaint();
+    }
+
+    public double currentValueNormalized() {
+        return (currentValue - minValue) / (maxValue - minValue);
     }
 }

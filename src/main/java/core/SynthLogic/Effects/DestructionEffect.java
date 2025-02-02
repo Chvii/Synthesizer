@@ -1,7 +1,5 @@
 package core.SynthLogic.Effects;
 
-import core.Constants.ConstantValues;
-
 import java.util.Random;
 
 public class DestructionEffect implements EffectRack {
@@ -34,9 +32,5 @@ public class DestructionEffect implements EffectRack {
         double distortionValue = randomGenerator.nextDouble();
         double randomDistortion = distortionValue / amount;
         return randomDistortion;
-    }
-    @Override
-    public EffectRack getEffect() {
-        return this;
     }
 }

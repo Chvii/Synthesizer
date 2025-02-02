@@ -1,18 +1,23 @@
 plugins {
-    // Tell Gradle that this is a java project
-    id ("java")
+    id("java")
 }
+
+group = "org.example"
+version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    // Use JUnit Jupiter API for testing.
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.3")
-    // Use JUnit Jupiter Engine for testing.
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.3")
+    implementation(files("/Users/christoffer/Documents/jVSTWrapper/jVSTwRapper_src/jVSTwRapper_bin.jar"))
+    implementation("com.github.wendykierp:JTransforms:3.1") // Add this line
 
-    // https://mvnrepository.com/artifact/org.hamcrest/hamcrest
+    testImplementation(platform("org.junit:junit-bom:5.9.1"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.hamcrest:hamcrest:3.0")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

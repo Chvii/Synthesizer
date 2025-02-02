@@ -33,9 +33,16 @@ public class WaveformStrategyPicker {
         };
     }
 
-    // Method to get the current waveform selector (optional, for GUI display purposes)
     public WaveformSelector getCurrentWaveform() {
         return waveformSelector;
+    }
+    public int getCurrentWaveformIndex() {
+        return waveformSelector.ordinal();
+    }
+    public void setCurrentWaveformIndex(int index) {
+        WaveformSelector[] values = WaveformSelector.values();
+        index = Math.max(0, Math.min(index, values.length - 1));
+        waveformSelector = values[index];
     }
     public String StringifyWaveformSelector(){
         return waveformSelector.toString();

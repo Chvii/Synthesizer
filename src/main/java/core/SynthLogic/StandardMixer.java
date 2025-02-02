@@ -1,6 +1,8 @@
 package core.SynthLogic;
 
 import core.Constants.ConstantValues;
+import core.SynthLogic.Effects.SaturatorEffect;
+import core.SynthLogic.Effects.EffectChain;
 import core.SynthLogic.Effects.EffectRack;
 import core.Visuals.WaveformUpdateListener;
 
@@ -18,18 +20,21 @@ public class StandardMixer implements Mixer {
     private final CopyOnWriteArrayList<Voice> activeVoices;
     private final ExecutorService executor;
     private final List<WaveformUpdateListener> listeners = new ArrayList<>();
-    private EffectRack effectRack;
+    private EffectChain effectChain;
     private final ThreadLocal<double[]> threadLocalMixBuffer = ThreadLocal.withInitial(() -> new double[ConstantValues.BUFFER_SIZE]);
     private final ThreadLocal<byte[]> threadLocalByteBuffer = ThreadLocal.withInitial(() -> new byte[ConstantValues.BUFFER_SIZE*2]);
-    private ArrayList<EffectRack> activeEffects;
 
-    ;
-    public StandardMixer(SourceDataLine line, EffectRack effectRack) {
-        activeEffects = new ArrayList<>();
-        this.effectRack = effectRack;
+
+
+    public StandardMixer(SourceDataLine line, EffectChain effectChain) {
+        this.effectChain = effectChain;
         this.line = line;
         this.activeVoices = new CopyOnWriteArrayList<>();
+        getActiveEffects();
         this.executor = Executors.newCachedThreadPool(); // Thread pool for voice processing
+    }
+    public ArrayList<EffectRack> getActiveEffects(){
+        return effectChain.getEffects();
     }
     @Override
     public void addWaveformUpdateListener(WaveformUpdateListener listener) {
@@ -44,8 +49,6 @@ public class StandardMixer implements Mixer {
             listener.updateWaveform(mixBuffer);
         }
     }
-
-
 
     @Override
     public void addVoice(Voice voice) {
@@ -90,14 +93,20 @@ public class StandardMixer implements Mixer {
                         for (Future<double[]> future : futures) {
                             try {
                                 double[] voiceBuffer = future.get();
-                                mixBuffer[i] += voiceBuffer[i]/7;
+                                mixBuffer[i] += voiceBuffer[i] / 7;
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
                         }
                     }
                 }
-                mixBuffer = effectRack.applyEffect(mixBuffer);
+                mixBuffer = effectChain.applyEffect(mixBuffer);
+
+                /**
+                 *  FOR TESTING NEW EFFECTS, OTHERWISE COMMENT OUT
+                 **/
+                //EffectRack testEffect = new SaturatorEffect();
+                //mixBuffer = testEffect.applyEffect(mixBuffer);
                 notifyWaveformUpdate(mixBuffer);
 
                 for (int i = 0; i < mixBuffer.length; i++) {
@@ -112,9 +121,5 @@ public class StandardMixer implements Mixer {
             }
         }).start();
     }
-
-    @Override
-    public ArrayList<EffectRack> getActiveEffects() {
-        return activeEffects;
-    }
 }
+

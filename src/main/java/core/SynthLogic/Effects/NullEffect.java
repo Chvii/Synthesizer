@@ -1,13 +1,26 @@
 package core.SynthLogic.Effects;
 
-public class NullEffect implements EffectRack{
+import java.util.List;
+
+public class NullEffect implements EffectRack, ParameterizedEffect {
     @Override
     public double[] applyEffect(double[] mixBuffer) {
         return mixBuffer;
     }
 
+
     @Override
-    public EffectRack getEffect() {
-        return this;
+    public List<Parameter> getParameters() {
+        return List.of();
+    }
+
+    @Override
+    public void setParameter(Parameter paramName, double value) {
+
+    }
+
+    @Override
+    public double getParameter(Parameter paramName) {
+        return 0;
     }
 }

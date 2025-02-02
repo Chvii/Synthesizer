@@ -1,10 +1,14 @@
 package core.SynthLogic.Effects;
 
 import core.Constants.ConstantValues;
+import core.Visuals.JKnob;
+
+import javax.swing.*;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FilterEffect implements EffectRack {
+public class FilterEffect implements EffectRack, ParameterizedEffect, Serializable {
     private final double MIN_FREQUENCY = 20.0; // Minimum cutoff frequency (20 Hz)
     private final double MAX_FREQUENCY = 20000.0; // Maximum cutoff frequency (20,000 Hz)
     private double knobPosition;
@@ -12,6 +16,20 @@ public class FilterEffect implements EffectRack {
     private double resonance; // Resonance (Q factor)
     private int filterStages; // Number of filter stages for roll-off intensity
     private List<BiquadFilterStage> stages; // List of filter stages for chaining
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * @param knobPosition Position of the cutoff knob, clockwise to increase cutoff frequency,
+     *                     counter-clockwise to decrease cutoff frequency
+     * @param resonance Resonance bump (Q factor). 0.5 for no bump, 0.707 for Butterworth.
+     */
+    public FilterEffect(double knobPosition, double resonance) {
+        this.knobPosition = knobPosition;
+        this.resonance = resonance;
+        this.cutoffFrequency = calculateCutoff(knobPosition); // Initialize cutoff frequency
+
+        setIntensity(FilterIntensity._12); // Default to 12 dB/octave
+    }
 
     /** I am not sure why I am using an enum either, it is what my brain can comprehend.
      *
@@ -30,20 +48,10 @@ public class FilterEffect implements EffectRack {
         }
     }
 
-    /**
-     * @param knobPosition Position of the cutoff knob, clockwise to increase cutoff frequency,
-     *                     counter-clockwise to decrease cutoff frequency
-     * @param resonance Resonance bump (Q factor). 0.5 for no bump, 0.707 for Butterworth.
-     */
-    public FilterEffect(double knobPosition, double resonance) {
-        this.knobPosition = knobPosition;
-        this.resonance = resonance;
-        this.cutoffFrequency = calculateCutoff(knobPosition); // Initialize cutoff frequency
 
-        setIntensity(FilterIntensity._12); // Default to 12 dB/octave
-    }
 
     public void setCutoff(double knobPosition) {
+        this.knobPosition = knobPosition; // Store the current knob position
         this.cutoffFrequency = calculateCutoff(knobPosition);
         for (BiquadFilterStage stage : stages) {
             stage.updateCoefficients(cutoffFrequency, resonance);
@@ -89,6 +97,82 @@ public class FilterEffect implements EffectRack {
             stage.updateCoefficients(cutoffFrequency, resonance);
         }
     }
+
+    // For changing effects and updating them dynamically with the GUI
+    public enum Parameter implements ParameterizedEffect.Parameter {
+        CUTOFF("Cutoff",0.0,1.0,1.0),
+        RESONANCE("Resonance",0.5,1.5,0.5),
+        INTENSITY("Slope", 0, FilterIntensity.values().length-1, 1);
+        private final String displayName;
+        private final double min;
+        private final double max;
+        private final double defaultValue;
+        private static final long serialVersionUID = 1L;
+
+
+        Parameter(String displayName, double min, double max, double defaultValue) {
+            this.displayName = displayName;
+            this.min = min;
+            this.max = max;
+            this.defaultValue = defaultValue;
+        }
+
+        @Override
+        public String getDisplayName() {
+            return displayName;
+        }
+        @Override
+        public ControlType getControlType() {
+            return this == INTENSITY ? ControlType.LIST : ControlType.KNOB;
+        }
+        @Override
+        public double getMin() {
+            return min;
+        }
+
+        @Override
+        public double getMax() {
+            return max;
+        }
+
+        @Override
+        public double getDefault() {
+            return defaultValue;
+        }
+        @Override
+        public Enum<?>[] getOptions() {
+            return this == INTENSITY ? FilterIntensity.values() : new Enum<?>[0];
+        }
+    }
+
+    @Override
+    public List<ParameterizedEffect.Parameter> getParameters() {
+        return List.of(Parameter.values());
+    }
+
+    @Override
+    public void setParameter(ParameterizedEffect.Parameter param, double value) {
+        if (param instanceof FilterEffect.Parameter) {
+            switch ((Parameter) param) {
+                case CUTOFF -> setCutoff(value);
+                case RESONANCE -> setResonance(value);
+                case INTENSITY -> setIntensity(FilterIntensity.values()[(int) Math.round(value)]);
+            }
+        }
+    }
+
+    @Override
+    public double getParameter(ParameterizedEffect.Parameter param) {
+        if (param instanceof FilterEffect.Parameter) {
+            return switch ((Parameter) param) {
+                case CUTOFF -> this.knobPosition;
+                case RESONANCE -> this.resonance;
+                case INTENSITY -> this.filterStages; // times 6 to get slope amount
+            };
+        }
+        return 0;
+    }
+
 
     /**
      * Nested class for a biquad filter stage.
@@ -154,9 +238,7 @@ public class FilterEffect implements EffectRack {
             calculateCoefficients();
         }
     }
-    @Override
-    public EffectRack getEffect() {
-        return this;
-    }
+
+
 
 }

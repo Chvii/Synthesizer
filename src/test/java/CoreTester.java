@@ -2,7 +2,6 @@ import core.Misc.Stubs.SourceDataLineStub;
 import core.Misc.Stubs.VoiceStub;
 import core.SynthLogic.*;
 import core.SynthLogic.Effects.*;
-import core.Visuals.GUIFrontendStuff;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -81,21 +80,29 @@ public class CoreTester {
     @Test
     public void mixerShouldCorrectlyApplyEffectsInEffectChain(){
         EffectRack effect0 = new NullEffect();
-        EffectRack effect1 = new DelayVerb(10,10,10,false);
+        EffectRack effect1 = new Delay(10,10,10,false);
         EffectRack effect2 = new FilterEffect(0.6,0.5);
 
         effectChain.addEffect(effect0);
         effectChain.addEffect(effect1);
         effectChain.addEffect(effect2);
 
-        mixer.addVoice(voiceStub);
-        mixer.startMixer();
-        assertThat(mixer.getActiveEffects(), is(effectChain.getEffects()));
+        Mixer newMixer = new StandardMixer(lineStub,effectChain);
+        newMixer.addVoice(voiceStub);
+        newMixer.startMixer();
+        assertThat(newMixer.getActiveEffects(), is(effectChain.getEffects()));
 
 
         EffectRack effect3 = new NoiseEffect();
         effectChain.addEffect(effect3);
-
+        assertThat(newMixer.getActiveEffects(), is(effectChain.getEffects()));
+        System.out.println(newMixer.getActiveEffects());
+        effectChain.reorderEffect(1,3);
+        System.out.println(newMixer.getActiveEffects());
+        assertThat(newMixer.getActiveEffects(), is(effectChain.getEffects()));
+        effectChain.reorderEffect(2,0);
+        System.out.println(newMixer.getActiveEffects());
+        assertThat(newMixer.getActiveEffects(), is(effectChain.getEffects()));
     }
 
 
