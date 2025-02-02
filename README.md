@@ -15,12 +15,12 @@ fast as possible), but it does what a very (VERY) basic synthesizer should do. H
 * Add ADSR functionality. **(DONE)**
 * Add different kinds of waveform mutators (FM, RM, the whole lot).
 * Add support for MIDI (NO idea how to do that -- yet). **(DONE)**
-* Make a GUI for interacting with the synthesizer. **(ONGOING)**
-* Implement different effects (reverb, delay, saturation, chorus). **(ONGOING)**
+* Make a GUI for interacting with the synthesizer. **(DONE)**
+* Implement different effects (reverb, delay, saturation, chorus). **(DONE)**
 * Add a sequencer with an intuitive GUI.
 * Figure out how to make a filter. **(DONE)**
 * Re-assignable LFO.
-* Add multiple oscillators.
+* Add multiple oscillators. **(DONE)**
 * Add granular synthesis functionality (because granular synths are cool and not enough people know about them).
 * Unison & Detune functionality.
 * Fun home-baked wavetables.
