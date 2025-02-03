@@ -1,7 +1,20 @@
 package core.WaveformStrategy;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+
 public class WaveformStrategyPicker {
-    private enum WaveformSelector {SINE, TRIANGLE, SAW, SQUARE, DNB}
+
+
+    enum WaveformSelector {SINE, TRIANGLE, SAW, SQUARE, DNB}
+
+    public WaveformSelector[] getWaveforms(){
+        return WaveformSelector.values();
+    }
+
+    public int getWaveformSelectorLength() {
+        return WaveformSelector.values().length;
+    }
 
     private WaveformSelector waveformSelector; // Instance variable to store the selected waveform
 
@@ -36,9 +49,11 @@ public class WaveformStrategyPicker {
     public WaveformSelector getCurrentWaveform() {
         return waveformSelector;
     }
+
     public int getCurrentWaveformIndex() {
         return waveformSelector.ordinal();
     }
+
     public void setCurrentWaveformIndex(int index) {
         WaveformSelector[] values = WaveformSelector.values();
         index = Math.max(0, Math.min(index, values.length - 1));

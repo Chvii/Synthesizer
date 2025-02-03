@@ -55,6 +55,7 @@ public class StandardTone implements Tone {
                     original.getGain(),
                     original.getOctaveShift()
             );
+            voiceOscillators[i].setIsActive(original.getIsActive());
         }
         mixer.addVoice(new StandardVoice(note, velocity, voiceOscillators));
     }

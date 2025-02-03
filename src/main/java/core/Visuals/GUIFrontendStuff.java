@@ -1,12 +1,11 @@
 package core.Visuals;
 
 import core.Constants.ConstantValues;
-import core.Misc.Preset;
 import core.SynthLogic.*;
 import core.SynthLogic.Controller.KeyboardToSynth;
 import core.SynthLogic.Controller.SynthController;
 import core.SynthLogic.Effects.*;
-import core.WaveformStrategy.WaveformStrategyPicker;
+import core.WaveformStrategy.*;
 import org.jtransforms.fft.DoubleFFT_1D;
 
 import javax.sound.midi.MidiUnavailableException;
@@ -17,19 +16,16 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import javax.swing.text.WrappedPlainView;
 import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-
 public class GUIFrontendStuff extends JFrame {
-    private WaveformStrategyPicker[] waveformPickers;
     private Tone tone;
     private EffectChain effectChain;
     private JLabel[] oscillatorLabels = new JLabel[3];
@@ -39,9 +35,9 @@ public class GUIFrontendStuff extends JFrame {
     private double sustainValue = 1.0;
     private double releaseValue = 0.1;
     private JLabel[] octaveStateLabels = new JLabel[3];
+    private WaveformStrategyPicker waveformPickers;
 
     public GUIFrontendStuff(Mixer mixer, WaveformStrategyPicker[] waveformPickers, Tone tone, EffectChain effectChain) {
-        this.waveformPickers = waveformPickers;
         this.tone = tone;
         this.effectChain = effectChain;
 
@@ -50,7 +46,7 @@ public class GUIFrontendStuff extends JFrame {
         setSize(1200, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-        setResizable(false);
+        setResizable(true);
 
         // Background Panel
         JPanel backgroundPanel = new JPanel(null) {
@@ -68,8 +64,9 @@ public class GUIFrontendStuff extends JFrame {
         add(backgroundPanel);
 
         // Oscillators Panel
+        initializeOscillatorStates();
         JPanel oscillatorsPanel = createOscillatorsPanel(mixer);
-        oscillatorsPanel.setBounds(40, 40, 900, 300);
+        oscillatorsPanel.setBounds(40, 40, 800, 270);
         backgroundPanel.add(oscillatorsPanel);
 
         // ADSR Panel
@@ -79,14 +76,24 @@ public class GUIFrontendStuff extends JFrame {
 
         // Effect Panel
         JPanel effectPanel = createEffectPanel(effectChain);
-        effectPanel.setBounds(500, 360, 660, 370);
+        effectPanel.setBounds(500, 360, 550, 370);
         backgroundPanel.add(effectPanel);
 
+
         setVisible(true);
+
+    }
+
+    private void initializeOscillatorStates() {
+        // Activate only the first oscillator
+        for (int i = 0; i < 3; i++) {
+            Oscillator osc = tone.getOscillator(i);
+            osc.setIsActive(i == 0);
+        }
     }
 
     private JPanel createOscillatorsPanel(Mixer mixer) {
-        JPanel panel = new JPanel(null);
+        JPanel panel = new JPanel(new FlowLayout());
         panel.setBackground(new Color(30, 30, 30));
         panel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(new Color(100, 100, 100), 1),
@@ -99,7 +106,6 @@ public class GUIFrontendStuff extends JFrame {
 
         for (int i = 0; i < 3; i++) {
             JPanel oscPanel = createSingleOscillatorPanel(mixer, i);
-            oscPanel.setBounds(10 + (300 * i), 20, 290, 260);
             panel.add(oscPanel);
         }
         return panel;
@@ -117,50 +123,95 @@ public class GUIFrontendStuff extends JFrame {
                 new Font("Segoe UI", Font.BOLD, 12),
                 new Color(180, 200, 200)
         ));
-
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.BOTH;
 
-        // Column weights for 6-column grid (0-5)
-        int[] columnWeights = {0, 1, 1, 1, 1, 0}; // Middle 4 columns expand
-        for(int col=0; col<6; col++) {
-            gbc.gridx = col;
-            gbc.weightx = columnWeights[col];
-            panel.add(Box.createHorizontalGlue(), gbc);
-        }
-        gbc.weightx = 0; // Reset for actual components
 
-        // Waveform Display (columns 1-4) ---
+        // ================== WAVEFORM DISPLAY ==================
         WaveformDisplayPanel waveformDisplay = new WaveformDisplayPanel(oscillator);
-        gbc.gridx = 1;
+        gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.gridwidth = 4; // Spans 4 middle columns
-        gbc.weighty = 0.7; // 70% of vertical space
+        gbc.gridwidth = 5;
+        gbc.weightx = 2.0;
+        gbc.weighty = 0.6;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         panel.add(waveformDisplay, gbc);
 
-        // Octave Controls (column 5) ---
-        JPanel octavePanel = new JPanel(new GridLayout(3, 1, 0, 5));
+
+        // ================== POWER BUTTON ==================
+        CustomPowerButton powerButton = new CustomPowerButton();
+        powerButton.setSelected(oscillator.getIsActive());
+        powerButton.addItemListener(e -> {
+            boolean selected = powerButton.isSelected();
+            oscillator.setIsActive(selected);
+        });
+        repaint();
+
+
+        // ================== OCTAVE CONTROLS ==================
+        JPanel octavePanel = new JPanel();
+        octavePanel.setLayout(new BoxLayout(octavePanel, BoxLayout.Y_AXIS));
         octavePanel.setBackground(new Color(45, 45, 48));
-        octavePanel.setPreferredSize(new Dimension(60, 120));
+        octavePanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(100, 100, 100), 1),
+                "OCTAVE",
+                TitledBorder.LEFT,
+                TitledBorder.TOP,
+                new Font("Segoe UI", Font.BOLD, 7),
+                new Color(180, 200, 200)
+        ));
 
         JButton octUp = createIconButton("↑", new Color(100, 200, 150));
-        JLabel octaveLabel = new JLabel(String.valueOf(oscillator.getOctaveShift()), SwingConstants.CENTER);
+        octUp.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JLabel octaveLabel = new JLabel(oscillator.getPrettyOctaveValue() + "x", SwingConstants.CENTER);
+        octaveLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
         octaveLabel.setForeground(Color.WHITE);
+        octaveLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         JButton octDown = createIconButton("↓", new Color(200, 100, 100));
+        octDown.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        // Add components with spacing
+        octavePanel.add(Box.createVerticalGlue());
         octavePanel.add(octUp);
+        octavePanel.add(Box.createVerticalStrut(5));
         octavePanel.add(octaveLabel);
+        octavePanel.add(Box.createVerticalStrut(5));
         octavePanel.add(octDown);
+        octavePanel.add(Box.createVerticalGlue());
 
-        octUp.addActionListener(e -> updateOctave(i, oscillator, octaveLabel, 2));
-        octDown.addActionListener(e -> updateOctave(i, oscillator, octaveLabel, 0.5));
+        // Action listeners for octave buttons
+        octUp.addActionListener(e -> {
+            oscillator.octaveUp();
+            octaveLabel.setText(oscillator.getPrettyOctaveValue() + "x");
+        });
+        octDown.addActionListener(e -> {
+            oscillator.octaveDown();
+            octaveLabel.setText(oscillator.getPrettyOctaveValue() + "x");
+        });
 
-        gbc.gridx = 5; // 6th column
+        // container for power button and octave controls
+        JPanel rightPanel = new JPanel();
+        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
+        rightPanel.setBackground(new Color(45, 45, 48));
+
+        // Adding power button with spacing
+        JPanel powerContainer = new JPanel();
+        powerContainer.setBackground(new Color(45, 45, 48));
+        powerContainer.add(powerButton);
+        rightPanel.add(powerContainer);
+        rightPanel.add(Box.createVerticalStrut(8));
+        rightPanel.add(octavePanel);
+
+        // GridBagConstraints for right panel
+        gbc.gridx = 6;
+        gbc.gridy = 0;
         gbc.gridwidth = 1;
-        gbc.weighty = 0;
+        gbc.weightx = 0.1;
+        gbc.weighty = 0.6;
+        gbc.fill = GridBagConstraints.VERTICAL;
         gbc.anchor = GridBagConstraints.NORTHEAST;
-        panel.add(octavePanel, gbc);
+        panel.add(rightPanel, gbc);
 
         // Waveform Selector (below waveform) ---
         JPanel controlPanel = new JPanel(new BorderLayout(5, 0));
@@ -178,15 +229,16 @@ public class GUIFrontendStuff extends JFrame {
         controlPanel.add(waveformLabel, BorderLayout.CENTER);
         controlPanel.add(nextButton, BorderLayout.EAST);
 
-        gbc.gridx = 1;
+        gbc.gridx = 0;
         gbc.gridy = 1;
-        gbc.gridwidth = 4;
-        gbc.weighty = 0.1; // 10% of vertical space
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridwidth = 6;
+        gbc.weighty = 0.2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         panel.add(controlPanel, gbc);
 
+
         // Knobs (bottom row) ---
-        JPanel knobPanel = new JPanel(new GridLayout(1, 2, 20, 0));
+        JPanel knobPanel = new JPanel(new GridLayout(1, 2, 10, 0));
         knobPanel.setBackground(new Color(45, 45, 48));
 
         // Info panel showing knob value ---
@@ -201,21 +253,22 @@ public class GUIFrontendStuff extends JFrame {
         ));
         knobInfoPanel.setFont(new Font("Segoe UI", Font.BOLD, 12));
         knobInfoPanel.setForeground(Color.white);
+        knobInfoPanel.setLayout(new BoxLayout(knobInfoPanel,BoxLayout.Y_AXIS));
+
+        knobPanel.add(knobInfoPanel);
+
 
         // Detune ---
-
         JKnob detuneKnob = createStyledKnob("Detune", -10, 10, 0, new Color(200, 120, 80));
         detuneKnob.setRadius(10);
         detuneKnob.addKnobListener(e -> {
             oscillator.setDetune(e);
-            knobInfoPanel.setTipText("D: " + detuneKnob.getCurrentValue());
+            knobInfoPanel.setTipText(detuneKnob.getCurrentValue());
+            knobInfoPanel.setFont(new Font("Segoe UI", Font.BOLD, 10));
+
             knobInfoPanel.repaint();
 
         });
-        knobPanel.add(knobInfoPanel);
-
-
-
 
         knobPanel.add(createKnobPanel(detuneKnob, "DETUNE"));
 
@@ -223,16 +276,18 @@ public class GUIFrontendStuff extends JFrame {
         gainKnob.setRadius(10);
         gainKnob.addKnobListener(e -> {
             oscillator.setGain(e);
-            knobInfoPanel.setTipText("G: " + gainKnob.getCurrentValue());
+            knobInfoPanel.setTipText(gainKnob.getCurrentValue());
+            knobInfoPanel.setFont(new Font("Segoe UI", Font.BOLD, 10));
             knobInfoPanel.repaint();
         });
         knobPanel.add(createKnobPanel(gainKnob, "GAIN"));
 
-        gbc.gridx = 1;
+
+        gbc.gridx = 0;
         gbc.gridy = 2;
-        gbc.gridwidth = 4;
-        gbc.weighty = 0.2; // 20% of vertical space
-        //gbc.anchor = GridBagConstraints.SOUTH;
+        gbc.gridwidth = 6;
+        gbc.weighty = 0.2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         panel.add(knobPanel, gbc);
 
         return panel;
@@ -251,6 +306,7 @@ public class GUIFrontendStuff extends JFrame {
     private void updateOctave(int index, Oscillator oscillator, JLabel octaveLabel, double multiplier) {
         double newOctave = oscillator.getOctaveShift() * multiplier;
         oscillator.setOctaveShift(newOctave);
+        newOctave = oscillator.getPrettyOctaveValue();
         octaveLabel.setText(String.format("%.1fx", newOctave));
     }
     private JButton createIconButton(String text, Color color) {
@@ -282,7 +338,7 @@ public class GUIFrontendStuff extends JFrame {
     }
 
     private void updateOctaveLabel(int index, Oscillator oscillator) {
-        octaveStateLabel.setText("Octave: " + oscillator.getOctaveShift());
+        octaveStateLabel.setText("Octave: " + oscillator.getPrettyOctaveValue());
     }
 
     private double getAttackValueOnGraph() {
@@ -398,7 +454,7 @@ public class GUIFrontendStuff extends JFrame {
 
     private JPanel createEffectPanel(EffectChain effectChain) {
         JPanel panel = new JPanel(new BorderLayout(10,10));
-        panel.setPreferredSize(new Dimension(640, 350));
+        panel.setPreferredSize(new Dimension(550, 370));
         panel.setBackground(new Color(45, 45, 48));
         panel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(new Color(100, 100, 100), 1),
@@ -438,7 +494,7 @@ public class GUIFrontendStuff extends JFrame {
         });
 
         JScrollPane scrollPane = new JScrollPane(effectList);
-        scrollPane.setPreferredSize(new Dimension(200, 260));
+        scrollPane.setPreferredSize(new Dimension(160, 260));
         scrollPane.setBackground(new Color(40,40,46));
         scrollPane.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(new Color(100, 100, 100), 1),
@@ -475,7 +531,7 @@ public class GUIFrontendStuff extends JFrame {
         paramPanel.setLayout(new BoxLayout(paramPanel, BoxLayout.Y_AXIS));
         paramPanel.setBackground(new Color(45, 45, 48));
         JScrollPane paramScroll = new JScrollPane(paramPanel) {{
-            setPreferredSize(new Dimension(350, 280));
+            setPreferredSize(new Dimension(320, 280));
             setBorder(BorderFactory.createTitledBorder(
                     BorderFactory.createLineBorder(new Color(100, 100, 100), 1),
                     "PARAMETERS",
@@ -557,7 +613,7 @@ public class GUIFrontendStuff extends JFrame {
             parent.add(controlPanel, BorderLayout.SOUTH);
 
         } else {
-            parent.setLayout(new GridLayout(0, 3, 5, 5));
+            parent.setLayout(new GridLayout(3, 3, 5, 5));
 
             for (ParameterizedEffect.Parameter param : effect.getParameters()) {
                 JPanel controlPanel = createControlPanel(param.getDisplayName());
@@ -763,8 +819,8 @@ public class GUIFrontendStuff extends JFrame {
 
     class WaveformDisplayPanel extends JPanel {
         private final Oscillator oscillator;
-        private final int width = 225;
-        private final int height = 140;
+        private final int width = 170;
+        private final int height = 100;
 
         public WaveformDisplayPanel(Oscillator oscillator) {
             this.oscillator = oscillator;
@@ -919,113 +975,60 @@ public class GUIFrontendStuff extends JFrame {
         }
     }
 
-    class SpectrumPanel extends JPanel implements WaveformUpdateListener {
-        private static final double MIN_DB = -80;
-        private static final double MAX_DB = 6;
-        private final double[] magnitudes;
-        private final double[] frequencies;
-        private final DoubleFFT_1D fft;
-        private final double[] fftBuffer;
+    class CustomPowerButton extends JToggleButton {
+        private static final Color ON_COLOR = new Color(120, 240, 80);
+        private static final Color OFF_COLOR = new Color(200, 0, 0);
+        private static final Color HOVER_COLOR = new Color(255, 255, 255, 50);
+        private static final int SIZE = 24;
 
-        public SpectrumPanel() {  // No arguments needed
-            setPreferredSize(new Dimension(400, 200));
-            setBackground(new Color(30, 30, 34));
-
-            // FFT setup
-            int bufferSize = ConstantValues.BUFFER_SIZE;
-            fft = new DoubleFFT_1D(bufferSize);
-            fftBuffer = new double[bufferSize * 2];
-            magnitudes = new double[bufferSize/2];
-
-            // Logarithmic frequency scale
-            frequencies = new double[magnitudes.length];
-            double logMin = Math.log10(20);
-            double logMax = Math.log10(20000);
-            for(int i=0; i<frequencies.length; i++) {
-                double fraction = (double)i/frequencies.length;
-                frequencies[i] = Math.pow(10, logMin + fraction*(logMax - logMin));
-            }
-        }
-
-        @Override
-        public void updateWaveform(double[] buffer) {
-            // Copy audio to FFT buffer (windowed)
-            for(int i=0; i<buffer.length; i++) {
-                double window = 0.5 * (1 - Math.cos(2*Math.PI*i/(buffer.length-1)));
-                fftBuffer[i] = buffer[i] * window;
-            }
-            Arrays.fill(fftBuffer, buffer.length, fftBuffer.length, 0);
-
-            fft.realForward(fftBuffer);
-
-            // Calculate magnitudes
-            for(int i=0; i<magnitudes.length; i++) {
-                double re = fftBuffer[2*i];
-                double im = fftBuffer[2*i+1];
-                magnitudes[i] = 20 * Math.log10(Math.hypot(re, im)/buffer.length);
-            }
-
-            repaint();
+        public CustomPowerButton() {
+            setPreferredSize(new Dimension(SIZE, SIZE));
+            setBorder(BorderFactory.createEmptyBorder());
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setOpaque(false);
         }
 
         @Override
         protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2d = (Graphics2D)g;
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            // Draw grid
-            g2d.setColor(new Color(80, 80, 80));
-            drawLogGrid(g2d);
-            drawLinearGrid(g2d);
-
-            // Draw spectrum
-            g2d.setColor(new Color(100, 200, 255));
-            g2d.setStroke(new BasicStroke(2));
-
-            int prevX = freqToX(frequencies[0]);
-            int prevY = dbToY(magnitudes[0]);
-
-            for(int i=1; i<magnitudes.length; i++) {
-                int x = freqToX(frequencies[i]);
-                int y = dbToY(magnitudes[i]);
-
-                if(x != prevX) { // Skip duplicate points
-                    g2d.drawLine(prevX, prevY, x, y);
-                    prevX = x;
-                    prevY = y;
-                }
+            // Button background
+            Color bgColor = isSelected() ? ON_COLOR : OFF_COLOR;
+            if (getModel().isPressed()) {
+                bgColor = bgColor.darker();
+            } else if (getModel().isRollover()) {
+                bgColor = bgColor.brighter();
             }
-        }
 
-        private int freqToX(double freq) {
-            double logMin = Math.log10(20);
-            double logMax = Math.log10(20000);
-            double pos = (Math.log10(freq) - logMin) / (logMax - logMin);
-            return (int)(pos * getWidth());
-        }
+            // Main circle
+            g2.setColor(bgColor);
+            g2.fillOval(0, 0, SIZE, SIZE);
 
-        private int dbToY(double db) {
-            db = Math.max(MIN_DB, Math.min(MAX_DB, db));
-            return (int)(getHeight() * (1 - (db - MIN_DB)/(MAX_DB - MIN_DB)));
-        }
-
-        private void drawLogGrid(Graphics2D g2d) {
-            int[] markers = {20, 100, 1000, 10000, 20000};
-            for(int freq : markers) {
-                int x = freqToX(freq);
-                g2d.drawLine(x, 0, x, getHeight());
-                g2d.drawString(freq + "Hz", x+3, getHeight()-5);
+            // Inner symbol
+            g2.setColor(Color.WHITE);
+            if (isSelected()) {
+                // "I" shape when on
+                g2.fillRect(SIZE/2 - 2, SIZE/4, 4, SIZE/2);
+            } else {
+                // "O" shape when off
+                g2.setStroke(new BasicStroke(2));
+                g2.drawOval(SIZE/4, SIZE/4, SIZE/2, SIZE/2);
             }
+
+            // Hover effect
+            if (getModel().isRollover()) {
+                g2.setColor(HOVER_COLOR);
+                g2.fillOval(0, 0, SIZE, SIZE);
+            }
+
+            g2.dispose();
         }
 
-        private void drawLinearGrid(Graphics2D g2d) {
-            for(int db=(int)MIN_DB; db<=MAX_DB; db+=12) {
-                int y = dbToY(db);
-                g2d.drawLine(0, y, getWidth(), y);
-                g2d.drawString(db + "dB", 5, y-3);
-            }
+        @Override
+        protected void paintBorder(Graphics g) {
+            // No border
         }
     }
-
 }

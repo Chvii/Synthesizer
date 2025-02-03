@@ -26,7 +26,7 @@ public class EffectFactory {
         return switch (type) {
             case FILTER -> new FilterEffect(1.0f, 0.5f);
             case DELAY -> new Delay(0.5f, 0.5f, 0.3f, false);
-            case DISTORTION -> new DestructionEffect();
+            case DISTORTION -> new DestructionEffect(DestructionEffect.Parameter.SAUCE.getDefault(), DestructionEffect.Parameter.HIGHENDTAMER.getDefault(), DestructionEffect.Parameter.FREQUENCY.getDefault());
             case NOISE -> new NoiseEffect();
             case SATURATOR -> new SaturatorEffect();
             case REVERB -> new NullEffect();

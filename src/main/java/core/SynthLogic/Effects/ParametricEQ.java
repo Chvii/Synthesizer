@@ -110,20 +110,20 @@ public class ParametricEQ implements EffectRack, ParameterizedEffect, Serializab
     // Parameter implementation
     public enum Parameter implements ParameterizedEffect.Parameter {
         BAND1_FREQ("Band 1 Freq", 20, 20000, 100),
-        BAND1_GAIN("Band 1 Gain", -12, 12, 0),
-        BAND1_Q("Band 1 Q", 0.1, 10, 1),
+        BAND1_GAIN("Band 1 Gain", -20, 20, 0),
+        BAND1_Q("Band 1 Q", 0.1, 20, 1),
         BAND2_FREQ("Band 2 Freq", 20, 20000, 400),
-        BAND2_GAIN("Band 2 Gain", -12, 12, 0),
-        BAND2_Q("Band 2 Q", 0.1, 10, 1),
+        BAND2_GAIN("Band 2 Gain", -20, 20, 0),
+        BAND2_Q("Band 2 Q", 0.1, 20, 1),
         BAND3_FREQ("Band 3 Freq", 20, 20000, 1600),
-        BAND3_GAIN("Band 3 Gain", -12, 12, 0),
-        BAND3_Q("Band 3 Q", 0.1, 10, 1),
+        BAND3_GAIN("Band 3 Gain", -20, 20, 0),
+        BAND3_Q("Band 3 Q", 0.1, 20, 1),
         BAND4_FREQ("Band 4 Freq", 20, 20000, 6400),
-        BAND4_GAIN("Band 4 Gain", -12, 12, 0),
-        BAND4_Q("Band 4 Q", 0.1, 10, 1),
+        BAND4_GAIN("Band 4 Gain", -20, 20, 0),
+        BAND4_Q("Band 4 Q", 0.1, 20, 1),
         BAND5_FREQ("Band 5 Freq", 20, 20000, 16000),
-        BAND5_GAIN("Band 5 Gain", -12, 12, 0),
-        BAND5_Q("Band 5 Q", 0.1, 10, 1);
+        BAND5_GAIN("Band 5 Gain", -20, 20, 0),
+        BAND5_Q("Band 5 Q", 0.1, 20, 1);
 
         private final String displayName;
         private final double min;

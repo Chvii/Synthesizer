@@ -18,5 +18,8 @@ public interface Oscillator {
     double getDetune();
     double getGain();
     double[] generateWaveformSamples();
+    int getPrettyOctaveValue();
+    boolean getIsActive();
+    void setIsActive(boolean active);
 }
 

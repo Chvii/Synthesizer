@@ -10,6 +10,8 @@ public class StandardOscillator implements Oscillator{
     private double octaveShift; // Octave up/down (-2, -1, 0, +1, +2)
     private double frequency;
     private double phase = 0;
+    private int prettyOctave = 0;
+    private volatile boolean isActive;
 
     public StandardOscillator(WaveformStrategy waveformStrategy, double detune, double gain, double octaveShift) {
         this.waveformStrategy = waveformStrategy;
@@ -24,6 +26,9 @@ public class StandardOscillator implements Oscillator{
     public double generateSample(double baseFrequency, double volume) {
         double frequency = (baseFrequency * octaveShift) + detune;
         double sample = waveformStrategy.generateSample(phase, volume * gain) * gain;
+        if(!isActive){
+            sample = 0;
+        }
         phase += 2 * Math.PI * frequency / ConstantValues.SAMPLE_RATE;
         if (phase > 2 * Math.PI) {
             phase -= 2 * Math.PI;
@@ -60,11 +65,13 @@ public class StandardOscillator implements Oscillator{
     @Override
     public void octaveUp() {
         this.octaveShift *= 2;
+        prettyOctave += 1;
     }
 
     @Override
     public void octaveDown() {
         this.octaveShift /= 2;
+        prettyOctave -= 1;
     }
 
     public double getDetune(){
@@ -77,6 +84,21 @@ public class StandardOscillator implements Oscillator{
     @Override
     public double getOctaveShift(){
         return octaveShift;
+    }
+
+    @Override
+    public int getPrettyOctaveValue(){
+        return prettyOctave;
+    }
+
+    @Override
+    public boolean getIsActive() {
+        return isActive;
+    }
+
+    @Override
+    public void setIsActive(boolean active){
+        this.isActive = active;
     }
 
     @Override

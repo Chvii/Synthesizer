@@ -77,13 +77,13 @@ public class StandardVoice implements Voice {
         return this.note;
     }
     public static void setAttackTime(double time) {
-        attackTime = 1.0 / (time * 1000 / ConstantValues.BUFFER_SIZE);
+        attackTime = 1.0 / (time * 10000 / ConstantValues.BUFFER_SIZE);
     }
     public static double getAttackTime(){
         return attackTime;
     }
     public static void setDecayTime(double time) {
-        decayTime = 1.0 / (time * 1000 / ConstantValues.BUFFER_SIZE);
+        decayTime = 1.0 / (time * 100000 / ConstantValues.BUFFER_SIZE);
     }
 
     public static double getDecayTime() {
@@ -96,7 +96,7 @@ public class StandardVoice implements Voice {
         return sustainLevel;
     }
     public static void setReleaseTime(double time) {
-        releaseTime = 1.0 / (time * 1000 / ConstantValues.BUFFER_SIZE);
+        releaseTime = 1.0 / (time * 5000 / ConstantValues.BUFFER_SIZE);
     }
     public static double getReleaseTime(){
         return releaseTime;
